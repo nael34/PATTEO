@@ -1,10 +1,11 @@
-// Read-only payment status for PATTEO's test-mode return page.
+// Read-only payment status for PATTEO.
 export default async function handler(req,res){
   if(req.method!=='GET')return res.status(405).json({error:'Méthode non autorisée'});
   const id=req.query.session_id;
-  if(typeof id!=='string'||!/^cs_test_[A-Za-z0-9_]+$/.test(id))return res.status(400).json({error:'Identifiant invalide'});
-  const key=process.env.STRIPE_SECRET_KEY;
-  if(!key?.startsWith('sk_test_'))return res.status(503).json({error:'Paiement test non configuré'});
+  if(typeof id!=='string'||!/^cs_(?:test_|live_)?[A-Za-z0-9_]+$/.test(id))return res.status(400).json({error:'Identifiant invalide'});
+  const live=Boolean(process.env.STRIPE_PUBLISHABLE_KEY_LIVE?.startsWith('pk_live_'));
+  const key=live?process.env.STRIPE_RESTRICTED_KEY_LIVE:process.env.STRIPE_SECRET_KEY;
+  if(!key || !(live?/^(sk_live_|rk_live_)/.test(key):key.startsWith('sk_test_')))return res.status(503).json({error:'Configuration Stripe incomplète'});
   try{
     const response=await fetch('https://api.stripe.com/v1/checkout/sessions/'+encodeURIComponent(id),{headers:{Authorization:'Bearer '+key,'Stripe-Version':'2026-08-26.dahlia'}});
     const data=await response.json();
