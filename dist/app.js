@@ -131,14 +131,38 @@
     const status=document.getElementById('patteo-payment-status');
     const form=document.getElementById('patteo-payment-form');
     const error=document.getElementById('patteo-payment-error');
-    let livePayments=false;
     let activeCheckout=null;
     const loadStripe=()=>new Promise((resolve,reject)=>{
       if(window.Stripe)return resolve(window.Stripe);
       const script=document.createElement('script');script.src='https://js.stripe.com/endive/stripe.js';script.onload=()=>resolve(window.Stripe);script.onerror=()=>reject(new Error('Stripe ne peut pas être chargé'));document.head.appendChild(script);
     });
     const sessionId=params.get('session_id');
-    if(sessionId){status.textContent='Vérification du paiement…';fetch('/api/session-status?session_id='+encodeURIComponent(sessionId)).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||'Vérification indisponible');status.textContent=d.payment_status==='paid'?'Paiement test confirmé. Merci pour votre commande !':d.status==='open'?'Paiement non terminé. Vous pouvez réessayer.':'Paiement en attente de confirmation.';}).catch(e=>{status.textContent=e.message;});}
+    const renderConfirmation=data=>{
+      const main=document.getElementById('main');
+      main.innerHTML='<section class="patteo-confirmation container"><div class="patteo-confirmation-card"><div class="patteo-confirmation-mark" aria-hidden="true">✓</div><p class="eyebrow">PAIEMENT TEST CONFIRMÉ</p><h1>Merci pour votre commande.</h1><p class="patteo-confirmation-intro">Stripe a confirmé le paiement de test. Aucun montant réel n’a été prélevé.</p><p class="patteo-order-reference">Référence de commande <strong id="patteo-order-number"></strong></p><h2>Récapitulatif</h2><div id="patteo-confirmation-items" class="patteo-confirmation-items"></div><div class="patteo-confirmation-total"><span>Total payé</span><strong id="patteo-confirmation-total"></strong></div><p class="small-print">Un e-mail de confirmation sera envoyé à l’adresse saisie lors du paiement.</p><a class="button button-dark" href="/">Retour à Patteo</a></div></section>';
+      document.getElementById('patteo-order-number').textContent=data.orderNumber;
+      document.getElementById('patteo-confirmation-total').textContent=data.totalLabel;
+      const list=document.getElementById('patteo-confirmation-items');
+      for(const item of data.items){const row=document.createElement('div');row.className='patteo-confirmation-item';const description=document.createElement('div');const title=document.createElement('strong');title.textContent=item.name;const quantity=document.createElement('span');quantity.textContent=`${item.quantity} × ${item.unitLabel}`;const lineTotal=document.createElement('strong');lineTotal.textContent=item.totalLabel;description.append(title,quantity);row.append(description,lineTotal);list.append(row);}
+      cart=[];try{localStorage.removeItem('patteo-cart-v1');}catch{}document.querySelectorAll('.cart-count').forEach(el=>el.textContent='0');
+    };
+    const showRetry=(message,allowRetry)=>{status.textContent=message;if(allowRetry){const link=document.createElement('a');link.className='inline-link';link.href='/commande/';link.textContent='Reprendre le paiement';status.append(document.createElement('br'),link);}};
+    const verifyPayment=async()=>{
+      status.textContent='Nous vérifions le paiement directement auprès de Stripe…';
+      try{
+        for(let attempt=0;attempt<5;attempt++){
+          const response=await fetch('/api/session-status?session_id='+encodeURIComponent(sessionId),{cache:'no-store'});
+          const data=await response.json();
+          if(!response.ok)throw Error(data.error||'Vérification indisponible');
+          if(data.state==='paid'){renderConfirmation(data);return;}
+          if(data.state==='unpaid'){showRetry('Stripe ne confirme pas de paiement pour cette session. Aucune commande n’est indiquée comme payée.',true);return;}
+          if(attempt<4)await new Promise(resolve=>setTimeout(resolve,1500));
+        }
+        showRetry('Le paiement est encore en cours de vérification. Cette page ne confirme pas la commande tant que Stripe ne l’a pas marquée comme payée.',false);
+        const retry=document.createElement('button');retry.className='text-button';retry.type='button';retry.textContent='Vérifier à nouveau';retry.addEventListener('click',verifyPayment);status.append(document.createElement('br'),retry);
+      }catch(error){showRetry(error.message||'Impossible de vérifier le paiement auprès de Stripe. Ne repassez pas commande avant d’avoir contrôlé votre espace Stripe.',false);}
+    };
+    if(sessionId)verifyPayment();
     else if(cart.length){
       status.textContent='Chargement du paiement sécurisé…';
       (async()=>{
@@ -147,24 +171,20 @@
         if(!response.ok||!data.clientSecret)throw Error(data.detail||data.error||'Paiement indisponible');
         const Stripe=await loadStripe();
         if(!Stripe)throw Error('Stripe indisponible');
-        livePayments=Boolean(data.live);
-        if(livePayments){
-          document.querySelectorAll('.patteo-payment-card .small-print').forEach(el=>el.textContent='Paiement sécurisé directement sur Patteo.');
-          document.querySelectorAll('.launch-notice').forEach(el=>el.remove());
-        }
+        if(!data.publishableKey?.startsWith('pk_test_'))throw Error('Configuration Stripe test refusée. Aucun paiement ne sera lancé.');
         const stripe=Stripe(data.publishableKey);
         activeCheckout=stripe.initCheckoutElementsSdk({clientSecret:data.clientSecret,adaptivePricing:{allowed:true},elementsOptions:{appearance:{theme:'stripe',variables:{colorPrimary:'#173e50',borderRadius:'12px'}}}});
         const loaded=await activeCheckout.loadActions();
         if(loaded.type!=='success')throw Error(loaded.error?.message||'Initialisation Stripe impossible');
         const stripeTotal=loaded.actions.getSession()?.total?.total?.amount;
         const payButton=document.getElementById('patteo-pay-button');
-        if(stripeTotal)payButton.textContent='Payer '+stripeTotal+(livePayments?'':' (test)');
-        activeCheckout.on('change',session=>{if(session?.total?.total?.amount)payButton.textContent='Payer '+session.total.total.amount+(livePayments?'':' (test)');payButton.disabled=!session.canConfirm;});
+        if(stripeTotal)payButton.textContent='Payer '+stripeTotal+' (test)';
+        activeCheckout.on('change',session=>{if(session?.total?.total?.amount)payButton.textContent='Payer '+session.total.total.amount+' (test)';payButton.disabled=!session.canConfirm;});
         activeCheckout.createContactDetailsElement().mount('#patteo-contact');
         activeCheckout.createShippingAddressElement().mount('#patteo-shipping');
         activeCheckout.createCurrencySelectorElement().mount('#patteo-currency-selector');
         activeCheckout.createPaymentElement().mount('#patteo-payment-element');
-        status.textContent=livePayments?'Paiement sécurisé — un prélèvement réel sera effectué après confirmation.':'Paiement de test — aucun prélèvement réel.';
+        status.textContent='Paiement de test uniquement — aucun prélèvement réel.';
         form.hidden=false;
       })().catch(e=>{status.textContent=e.message||'Impossible de charger le paiement';});
       form.addEventListener('submit',async e=>{

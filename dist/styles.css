@@ -47,3 +47,24 @@ dialog{color:var(--ink);background:var(--cream);border:0;padding:0;box-shadow:0 
 .patteo-payment-card #patteo-pay-button{margin-top:24px}
 .patteo-checkout-layout .checkout-summary .launch-notice{line-height:1.6}
 @media(max-width:600px){.patteo-payment-card{padding:20px 16px}.patteo-payment-card h2{font-size:24px}.patteo-payment-card #patteo-payment-form h3{font-size:16px;margin:26px 0 16px}}
+
+/* Verified Stripe return state */
+.patteo-confirmation{padding:54px 0 100px}
+.patteo-confirmation-card{max-width:720px;margin:0 auto;padding:clamp(26px,5vw,54px);border:1px solid #dce4da;border-radius:24px;background:#fffefa;box-shadow:0 18px 55px #173e500d}
+.patteo-confirmation-mark{display:grid;place-items:center;width:58px;height:58px;margin-bottom:25px;border-radius:50%;background:#e6efe7;color:#315c49;font-size:31px}
+.patteo-confirmation-card>.eyebrow{color:#526e63}
+.patteo-confirmation-card h1{margin:14px 0;font-size:clamp(34px,6vw,54px);line-height:1.08}
+.patteo-confirmation-intro{max-width:510px;color:#52635e;font-size:15px;line-height:1.75}
+.patteo-order-reference{display:flex;justify-content:space-between;gap:18px;margin:28px 0;padding:17px 20px;border-radius:12px;background:#edf1e9;font-size:13px}
+.patteo-order-reference strong{color:#173e50;overflow-wrap:anywhere;text-align:right}
+.patteo-confirmation-card h2{margin:35px 0 14px;font-size:25px}
+.patteo-confirmation-items{border-top:1px solid #dce4da}
+.patteo-confirmation-item{display:flex;justify-content:space-between;gap:20px;padding:17px 0;border-bottom:1px solid #e5e9e4;font-size:14px}
+.patteo-confirmation-item>div{display:grid;gap:6px}
+.patteo-confirmation-item span{color:#687570;font-size:12px}
+.patteo-confirmation-item>strong{white-space:nowrap}
+.patteo-confirmation-total{display:flex;justify-content:space-between;gap:16px;margin:22px 0 25px;font-size:17px}
+.patteo-confirmation-total strong{font-size:23px;color:#173e50}
+.patteo-confirmation-card>.small-print{margin:20px 0;color:#687570}
+.patteo-confirmation-card>.button{margin-top:12px}
+@media(max-width:600px){.patteo-confirmation{padding:28px 0 64px}.patteo-confirmation-card{padding:24px 19px;border-radius:17px}.patteo-confirmation-item{gap:10px;font-size:12px}.patteo-confirmation-item>strong{font-size:12px}.patteo-order-reference{align-items:flex-start;flex-direction:column;gap:7px}.patteo-order-reference strong{text-align:left}}
