@@ -7,7 +7,7 @@ const dimensions = {xs:'30 × 50 cm',s:'40 × 60 cm',m:'45 × 70 cm',l:'50 × 80
 export default async function handler(req,res) {
   if (req.method !== 'POST') return res.status(405).json({error:'Méthode non autorisée'});
   const livePublicKey=process.env.STRIPE_PUBLISHABLE_KEY_LIVE;
-  const live=Boolean(livePublicKey?.startsWith('pk_live_'));
+  const live=process.env.STRIPE_MODE!=='test' && Boolean(livePublicKey?.startsWith('pk_live_'));
   const key=live?process.env.STRIPE_RESTRICTED_KEY_LIVE:process.env.STRIPE_SECRET_KEY;
   const publicKey=live?livePublicKey:process.env.STRIPE_PUBLISHABLE_KEY;
   if (!key || !publicKey || !(live?/^(sk_live_|rk_live_)/.test(key):key.startsWith('sk_test_')&&publicKey.startsWith('pk_test_'))) return res.status(503).json({error:'Configuration Stripe incomplète',diagnostic:{liveKeyPresent:!!key,publicKeyPresent:!!publicKey,liveKeyFormat:!!key&&/^(sk_live_|rk_live_)/.test(key),publicKeyFormat:!!publicKey&&publicKey.startsWith('pk_live_')}});
