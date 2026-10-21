@@ -138,7 +138,7 @@
       const script=document.createElement('script');script.src='https://js.stripe.com/endive/stripe.js';script.onload=()=>resolve(window.Stripe);script.onerror=()=>reject(new Error('Stripe ne peut pas être chargé'));document.head.appendChild(script);
     });
     const sessionId=params.get('session_id');
-    if(sessionId){status.textContent='Retour du paiement : consultez votre confirmation Stripe. Ne préparez aucune commande sans vérifier le paiement dans Stripe.';}
+    if(sessionId){status.textContent='Vérification du paiement…';fetch('/api/session-status?session_id='+encodeURIComponent(sessionId)).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||'Vérification indisponible');status.textContent=d.payment_status==='paid'?'Paiement test confirmé. Merci pour votre commande !':d.status==='open'?'Paiement non terminé. Vous pouvez réessayer.':'Paiement en attente de confirmation.';}).catch(e=>{status.textContent=e.message;});}
     else if(cart.length){
       status.textContent='Chargement du paiement sécurisé…';
       (async()=>{
