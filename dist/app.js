@@ -6,7 +6,7 @@
     colors: {
       gris: { label: 'Gris galet', hex: '#9a9b96', image: '/assets/gris.webp', texture:'/assets/texture-macro.jpg' },
       bleu: { label: 'Bleu balade', hex: '#7696ae', image: '/assets/bleu.webp', texture:'/assets/bleu.webp' },
-      jaune: { label: 'Jaune soleil', hex: '#d9b650', image: '/assets/jaune.webp', texture:'/assets/jaune.webp' }
+      jaune: { label: 'Jaune soleil', hex: '#d9b650', image: '/assets/jaune.webp', texture:'/assets/texture-jaune.png' }
     }
   };
   const paths = {
