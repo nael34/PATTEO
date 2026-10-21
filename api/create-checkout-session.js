@@ -15,7 +15,6 @@ export default async function handler(req,res) {
   params.set('ui_mode','elements');
   params.set('locale','fr');
   params.set('return_url','https://patteo.vercel.app/commande/?session_id={CHECKOUT_SESSION_ID}');
-  params.set('shipping_address_collection[allowed_countries][0]','FR');
   params.set('billing_address_collection','auto');
   for (let i=0;i<cart.length;i++){
     const item=cart[i];
@@ -27,9 +26,9 @@ export default async function handler(req,res) {
     params.set(p+'[quantity]',String(item.qty));
   }
   try {
-    const response=await fetch('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/x-www-form-urlencoded','Stripe-Version':'2025-09-30.clover'},body:params.toString()});
+    const response=await fetch('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/x-www-form-urlencoded','Stripe-Version':'2026-08-26.dahlia'},body:params.toString()});
     const data=await response.json();
-    if(!response.ok||!data.client_secret) return res.status(502).json({error:'Impossible de créer la session Stripe'});
+    if(!response.ok||!data.client_secret) {console.error('Stripe Checkout session error',{status:response.status,code:data.error?.code,param:data.error?.param,message:data.error?.message});return res.status(502).json({error:'Création Stripe refusée',detail:data.error?.message||'Consultez les logs Vercel'}); }
     return res.status(200).json({clientSecret:data.client_secret});
   } catch { return res.status(502).json({error:'Service de paiement indisponible'}); }
 }
