@@ -1,6 +1,11 @@
 // Read-only payment status for PATTEO.
 export default async function handler(req,res){
   if(req.method!=='GET')return res.status(405).json({error:'Méthode non autorisée'});
+  if(req.query.diagnostic==='1'){
+    const p=process.env.STRIPE_PUBLISHABLE_KEY_LIVE;
+    const k=process.env.STRIPE_RESTRICTED_KEY_LIVE;
+    return res.status(200).json({livePublicKeyValid:!!p?.startsWith('pk_live_'),liveServerKeyValid:!!k&&/^(sk_live_|rk_live_)/.test(k),livePublicKeyPresent:!!p,liveServerKeyPresent:!!k});
+  }
   const id=req.query.session_id;
   if(typeof id!=='string'||!/^cs_(?:test_|live_)?[A-Za-z0-9_]+$/.test(id))return res.status(400).json({error:'Identifiant invalide'});
   const live=Boolean(process.env.STRIPE_PUBLISHABLE_KEY_LIVE?.startsWith('pk_live_'));
