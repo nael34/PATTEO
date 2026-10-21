@@ -8,7 +8,7 @@ export default async function handler(req,res){
   }
   const id=req.query.session_id;
   if(typeof id!=='string'||!/^cs_(?:test_|live_)?[A-Za-z0-9_]+$/.test(id))return res.status(400).json({error:'Identifiant invalide'});
-  const live=Boolean(process.env.STRIPE_PUBLISHABLE_KEY_LIVE?.startsWith('pk_live_'));
+  const live=process.env.STRIPE_MODE!=='test' && Boolean(process.env.STRIPE_PUBLISHABLE_KEY_LIVE?.startsWith('pk_live_'));
   const key=live?process.env.STRIPE_RESTRICTED_KEY_LIVE:process.env.STRIPE_SECRET_KEY;
   if(!key || !(live?/^(sk_live_|rk_live_)/.test(key):key.startsWith('sk_test_')))return res.status(503).json({error:'Configuration Stripe incomplète'});
   try{
