@@ -151,6 +151,10 @@
         activeCheckout=stripe.initCheckoutElementsSdk({clientSecret:data.clientSecret,elementsOptions:{appearance:{theme:'stripe',variables:{colorPrimary:'#173e50',borderRadius:'12px'}}}});
         const loaded=await activeCheckout.loadActions();
         if(loaded.type!=='success')throw Error(loaded.error?.message||'Initialisation Stripe impossible');
+        const stripeTotal=loaded.actions.getSession()?.total?.total?.amount;
+        const payButton=document.getElementById('patteo-pay-button');
+        if(stripeTotal)payButton.textContent='Payer '+stripeTotal+' (test)';
+        activeCheckout.on('change',session=>{if(session?.total?.total?.amount)payButton.textContent='Payer '+session.total.total.amount+' (test)';payButton.disabled=!session.canConfirm;});
         activeCheckout.createContactDetailsElement().mount('#patteo-contact');
         activeCheckout.createShippingAddressElement().mount('#patteo-shipping');
         activeCheckout.createPaymentElement().mount('#patteo-payment-element');
