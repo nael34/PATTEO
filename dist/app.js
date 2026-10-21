@@ -80,7 +80,7 @@
     document.getElementById('cart-items').innerHTML=cart.length?cartLines():emptyCart();
     document.querySelector('.cart-dialog-bottom').hidden=!cart.length;
     document.querySelector('[data-cart-total]').textContent=euro(total());
-    if(page==='checkout'){document.getElementById('checkout-items').innerHTML=cart.length?cartLines():emptyCart();document.querySelector('[data-checkout-subtotal]').textContent=euro(total());document.querySelector('[data-checkout-total]').textContent=euro(total());}
+    if(page==='checkout'){document.getElementById('checkout-items').innerHTML=cart.length?cartLines():emptyCart();document.querySelector('[data-checkout-subtotal]').textContent=euro(total());document.querySelector('[data-checkout-total]').textContent=euro(total());const payButton=document.querySelector('[data-stripe-checkout]');if(payButton)payButton.disabled=!cart.length;}
   }
   function setGallery(view){
     document.querySelectorAll('[data-gallery]').forEach(el=>{el.classList.toggle('active',el.dataset.gallery===view);el.setAttribute('aria-pressed',el.dataset.gallery===view);});
