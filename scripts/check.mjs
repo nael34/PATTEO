@@ -9,7 +9,8 @@ for(const file of files){
   assert.equal((html.match(/<h1[ >]/g)||[]).length,1,`${file}: one H1`);
   assert.match(html,/<html lang="fr">/);
   assert.match(html,/name="viewport"/);
-  assert.match(html,/name="robots" content="index,follow/);
+  if(file==='commande/index.html')assert.match(html,/name="robots" content="noindex,follow/);
+  else assert.match(html,/name="robots" content="index,follow/);
   for(const [,url] of html.matchAll(/(?:src|href)="(\/[^"#?]*)[^" ]*"/g)){
     const f=path.join(root,url.endsWith('/')?url+'index.html':url);
     const info=await stat(f);assert.ok(info.size>0,`Empty file ${f}`);
