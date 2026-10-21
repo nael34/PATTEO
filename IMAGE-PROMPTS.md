@@ -1,0 +1,24 @@
+# Images Patteo
+
+Génération avec l’outil image intégré, à partir des références fournies par l’utilisateur. Visuels de mise en scène, non photographies de tests réels. Versions optimisées dans `dist/assets/`. Originaux conservés dans le dossier d’images générées.
+
+## hero
+
+Use case: photorealistic-natural. Create one editorial lifestyle photograph for Patteo, a French dog doormat brand. References show the product texture and rectangular shape ONLY; ignore all screenshot UI and text. A happy adult golden retriever sitting on a rectangular medium grey chenille doormat (60x90cm proportions, dense short noodle tuft chenille, sewn grey fabric edge) just inside an open natural oak front door. Warm contemporary French home, cream limewashed walls, limestone floor, subtle olive green exterior foliage, ochre dog lead hanging in background. The dog looks slightly towards camera, calm candid expression. Dog and mat fit fully in frame, mat visibly foreground and realistically sized under dog, not huge carpet. Low angle, soft morning side light, premium tactile interior editorial photography, warm off-white, stone and honey palette, realistic fur, believable texture consistent with reference. Landscape 3:2, subjects mostly centered with room around, no text, logos, badge, measurements, watermarks or fabricated performance demonstration. This is a styled illustration, not an actual test.
+
+## gris
+
+Use case: product-mockup. Generate one premium e-commerce catalog photograph of a single rectangular absorbent chenille dog doormat, 60x90cm proportions. Use reference images strictly for the thick noodle-like chenille tufts and sewn fabric binding, not any UI or claims. Product color: warm medium dove grey. Mat laid FLAT on a warm ivory seamless studio floor, photographed from a slightly elevated 3/4 view, longer edge horizontal, soft short shadow, generous clean margins, full mat visible, subtle rounded corners, realistic dense rows of chenille pile, no backing pattern visible. Consistent clean studio lighting, soft natural light from upper left. Square composition. Only the mat, no dog, furniture, branding, text, watermark or floating elements. Faithful simple product shape, elegant commercial photography.
+
+## bleu
+
+Use case: product-mockup. Generate one premium e-commerce catalog photograph of a single rectangular absorbent chenille dog doormat, 60x90cm proportions. Use reference images strictly for the thick noodle-like chenille tufts and sewn fabric binding, not any UI or claims. Product color: muted dusty medium blue. Mat laid FLAT on a warm ivory seamless studio floor, photographed from a slightly elevated 3/4 view, longer edge horizontal, soft short shadow, generous clean margins, full mat visible, subtle rounded corners, realistic dense rows of chenille pile, no backing pattern visible. Consistent clean studio lighting, soft natural light from upper left. Square composition. Only the mat, no dog, furniture, branding, text, watermark or floating elements. Faithful simple product shape, elegant commercial photography.
+
+## jaune
+
+Use case: product-mockup. Generate one premium e-commerce catalog photograph of a single rectangular absorbent chenille dog doormat, 60x90cm proportions. Use reference images strictly for the thick noodle-like chenille tufts and sewn fabric binding, not any UI or claims. Product color: muted golden mustard yellow. Mat laid FLAT on a warm ivory seamless studio floor, photographed from a slightly elevated 3/4 view, longer edge horizontal, soft short shadow, generous clean margins, full mat visible, subtle rounded corners, realistic dense rows of chenille pile, no backing pattern visible. Consistent clean studio lighting, soft natural light from upper left. Square composition. Only the mat, no dog, furniture, branding, text, watermark or floating elements. Faithful simple product shape, elegant commercial photography.
+
+## logo
+
+Use case: logo-brand. Create a crisp high resolution horizontal logo for a warm, modern French pet-home brand named exactly "patteo" (all lowercase). Custom rounded friendly sans-serif wordmark in deep ink blue #163D50, generous but compact letterforms, characterful curved double t and round o. To the left a compact minimalist paw mark built from four round toe shapes and a soft rounded triangular pad with a tiny negative-space house-door notch. Mark and wordmark equal visual weight. Flat solid deep ink blue, no yellow, no gradient, no shadow, no texture. Transparent background, isolated vector-like graphic with crisp edges, horizontally centered with minimal surrounding margins, wide 3:1 image. No other text. Sophisticated, approachable, timeless, readable at small size.
+

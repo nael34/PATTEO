@@ -1,0 +1,11 @@
+{
+  "name": "patteo-storefront",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Boutique Patteo autonome — aperçu avant connexion du paiement",
+  "scripts": {
+    "dev": "node server.mjs",
+    "check": "node --check dist/app.js && node --check server.mjs && node scripts/check.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
