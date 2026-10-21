@@ -12,11 +12,11 @@ export default async function handler(req,res) {
   if (!Array.isArray(cart)||!cart.length||cart.length>15) return res.status(400).json({error:'Panier invalide'});
   const params=new URLSearchParams();
   params.set('mode','payment');
+  params.set('ui_mode','elements');
   params.set('locale','fr');
-  params.set('success_url','https://patteo.vercel.app/commande/?paiement=succes&session_id={CHECKOUT_SESSION_ID}');
-  params.set('cancel_url','https://patteo.vercel.app/commande/?paiement=annule');
+  params.set('return_url','https://patteo.vercel.app/commande/?session_id={CHECKOUT_SESSION_ID}');
   params.set('shipping_address_collection[allowed_countries][0]','FR');
-  params.set('phone_number_collection[enabled]','true');
+  params.set('billing_address_collection','auto');
   for (let i=0;i<cart.length;i++){
     const item=cart[i];
     if (!item||!Object.hasOwn(prices,item.size)||!Object.hasOwn(colors,item.color)||!Number.isInteger(item.qty)||item.qty<1||item.qty>10) return res.status(400).json({error:'Article invalide'});
@@ -29,7 +29,7 @@ export default async function handler(req,res) {
   try {
     const response=await fetch('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()});
     const data=await response.json();
-    if(!response.ok||!data.url) return res.status(502).json({error:'Impossible de créer la session Stripe'});
-    return res.status(200).json({url:data.url});
+    if(!response.ok||!data.client_secret) return res.status(502).json({error:'Impossible de créer la session Stripe'});
+    return res.status(200).json({clientSecret:data.client_secret});
   } catch { return res.status(502).json({error:'Service de paiement indisponible'}); }
 }
