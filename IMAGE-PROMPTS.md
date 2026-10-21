@@ -1,5 +1,11 @@
 # Images Patteo
 
+## texture-macro — 21 octobre 2026
+
+Fichier final : `dist/assets/texture-macro.jpg`. Génération avec l’outil image intégré, référence : le visuel gris du produit, puis conversion JPEG pour le web.
+
+Use case: product-mockup. Asset: premium e-commerce macro photograph for the Patteo chenille dog doormat. The attached image is the exact product reference: preserve its medium dove-grey color, tightly spaced rounded noodle-shaped chenille tufts, dense plush yarn and matching grey stitched fabric binding. Create a new close-up macro view of this same mat at a shallow three-quarter angle, filling almost the whole frame with chenille. Show individually visible fine fuzzy yarn filaments on the rounded tufts in the sharply focused central area, gently falling out of focus towards the back. The lower right corner should reveal a small section of the faithful sewn binding and warm ivory tabletop, to make it clear this is the same rectangular mat. Natural soft side light from upper left, realistic product photography, understated cream-grey palette, tactile but not exaggerated. Landscape 3:2 composition with actual visible woven texture, no text, watermark, logos, ruler, arrows, droplets, hands, dog or diagrams. Do not change or inflate pile shape, thickness or fiber structure relative to the reference. This is an illustrative AI product close-up, not microscopy or a scientific absorption test.
+
 Génération avec l’outil image intégré, à partir des références fournies par l’utilisateur. Visuels de mise en scène, non photographies de tests réels. Versions optimisées dans `dist/assets/`. Originaux conservés dans le dossier d’images générées.
 
 ## hero

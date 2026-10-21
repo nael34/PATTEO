@@ -1,5 +1,13 @@
 # Vérification — 21 octobre 2026
 
+## Mise à jour badges et gros plan
+
+- Badges SVG locaux : PayPal, Apple Pay, Google Pay, Cartes Bancaires, Visa et Mastercard. Mention « moyens de paiement prévus » car le paiement reste désactivé.
+- Présence dans la fiche produit, le tiroir panier et le récapitulatif.
+- Gros plan IA de la chenille grise dans la galerie, agrandissable avec le mécanisme existant, et dans une section dédiée.
+- Pré-rendu, syntaxe JavaScript, ressources locales et vérification des différences réussis après l’ajout.
+- Pas de nouvelle vérification interactive dans le navigateur : outil de contrôle du navigateur indisponible dans cette session. Les observations mobiles ci-dessous concernent la version précédente.
+
 ## Vérifié
 
 - Cinq pages pré-rendues, chacune avec titre principal, langue française et métadonnées mobiles.

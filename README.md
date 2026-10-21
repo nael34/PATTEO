@@ -15,7 +15,8 @@ Pas de dépendance à installer. Node 20+ suffit. Le serveur local utilise le po
 ## État réel
 
 - Aperçu privé, non indexable ; aucune campagne publicitaire active.
-- Paiement non connecté : aucun achat ni prélèvement possible. Le panier reste dans le navigateur.
+- Paiement non connecté : aucun achat ni prélèvement possible. Le panier reste dans le navigateur. Les six badges sont présentés comme « moyens de paiement prévus », près de l’ajout au panier, dans le panier et dans le récapitulatif.
+- Le gros plan IA `dist/assets/texture-macro.jpg` illustre la chenille grise dans la galerie et dans la section « Tout est dans la texture ». Il ne constitue pas une photographie de microscopie ni une vérification de la composition textile.
 - Aucune clé, aucun compte Stripe ni projet Vercel de PinkPrint n’a été utilisé.
 - Pas de faux avis, compteurs de clients, disponibilité inventée ou promotion fictive.
 - Les visuels IA sont illustratifs. Le produit et les teintes exactes restent à rapprocher des variantes fournisseur avant diffusion publicitaire.
