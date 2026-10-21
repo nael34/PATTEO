@@ -135,7 +135,7 @@
     let activeCheckout=null;
     const loadStripe=()=>new Promise((resolve,reject)=>{
       if(window.Stripe)return resolve(window.Stripe);
-      const script=document.createElement('script');script.src='https://js.stripe.com/v3/';script.onload=()=>resolve(window.Stripe);script.onerror=()=>reject(new Error('Stripe ne peut pas être chargé'));document.head.appendChild(script);
+      const script=document.createElement('script');script.src='https://js.stripe.com/endive/stripe.js';script.onload=()=>resolve(window.Stripe);script.onerror=()=>reject(new Error('Stripe ne peut pas être chargé'));document.head.appendChild(script);
     });
     const sessionId=params.get('session_id');
     if(sessionId){status.textContent='Retour du paiement : consultez votre confirmation Stripe. Ne préparez aucune commande sans vérifier le paiement dans Stripe.';}
@@ -144,11 +144,13 @@
       (async()=>{
         const response=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cart})});
         const data=await response.json();
-        if(!response.ok||!data.clientSecret)throw Error(data.error||'Paiement indisponible');
+        if(!response.ok||!data.clientSecret)throw Error(data.detail||data.error||'Paiement indisponible');
         const Stripe=await loadStripe();
         if(!Stripe)throw Error('Stripe indisponible');
         const stripe=Stripe(publicKey);
         activeCheckout=stripe.initCheckoutElementsSdk({clientSecret:data.clientSecret,elementsOptions:{appearance:{theme:'stripe',variables:{colorPrimary:'#173e50',borderRadius:'12px'}}}});
+        const loaded=await activeCheckout.loadActions();
+        if(loaded.type!=='success')throw Error(loaded.error?.message||'Initialisation Stripe impossible');
         activeCheckout.createContactDetailsElement().mount('#patteo-contact');
         activeCheckout.createShippingAddressElement().mount('#patteo-shipping');
         activeCheckout.createPaymentElement().mount('#patteo-payment-element');
@@ -158,7 +160,7 @@
       form.addEventListener('submit',async e=>{
         e.preventDefault();if(!activeCheckout)return;
         const btn=document.getElementById('patteo-pay-button');btn.disabled=true;error.textContent='';
-        try{const result=await activeCheckout.loadActions();if(result.error)throw Error(result.error.message);const outcome=await result.actions.confirm();if(outcome.error)throw Error(outcome.error.message);}catch(err){error.textContent=err.message||'Paiement impossible';}finally{btn.disabled=false;}
+        try{const result=await activeCheckout.loadActions();if(result.type!=='success')throw Error(result.error?.message||'Paiement indisponible');const outcome=await result.actions.confirm();if(outcome.type==='error')throw Error(outcome.error.message);}catch(err){error.textContent=err.message||'Paiement impossible';}finally{btn.disabled=false;}
       });
     }else status.textContent='Ajoutez un tapis au panier pour accéder au paiement.';
   }
