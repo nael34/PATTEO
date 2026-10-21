@@ -32,3 +32,18 @@ dialog{color:var(--ink);background:var(--cream);border:0;padding:0;box-shadow:0 
 .patteo-checkout-layout .checkout-summary{position:sticky;top:24px;min-width:0}
 .patteo-checkout-layout .checkout-summary>div:not(.launch-notice):not(.payment-reassurance){display:flex;justify-content:space-between;gap:12px}
 @media(max-width:850px){.patteo-checkout-layout{grid-template-columns:minmax(0,1fr);gap:24px}.patteo-checkout-layout .checkout-summary{position:static;grid-row:1}.patteo-payment-card{padding:20px}}
+
+/* Checkout typography and Stripe embedded form spacing */
+.patteo-payment-card h2{line-height:1.25;letter-spacing:-.025em}
+.patteo-payment-card .small-print{margin:0 0 18px;line-height:1.65}
+.patteo-payment-card #patteo-payment-status:empty{display:none}
+.patteo-payment-card #patteo-payment-status:not(:empty){margin:16px 0 22px;line-height:1.65}
+.patteo-payment-card #patteo-payment-form{display:flex;flex-direction:column;gap:0}
+.patteo-payment-card #patteo-payment-form[hidden]{display:none}
+.patteo-payment-card #patteo-payment-form h3{clear:both;display:block;line-height:1.4;font-size:17px;font-weight:650;margin:28px 0 18px;padding:0}
+.patteo-payment-card #patteo-payment-form h3:first-child{margin-top:8px}
+.patteo-payment-card #patteo-contact,.patteo-payment-card #patteo-shipping,.patteo-payment-card #patteo-payment-element,.patteo-payment-card #patteo-currency-selector{display:block;position:relative;min-height:0;margin:0 0 12px;overflow:visible}
+.patteo-payment-card #patteo-contact iframe,.patteo-payment-card #patteo-shipping iframe,.patteo-payment-card #patteo-payment-element iframe{max-width:100%}
+.patteo-payment-card #patteo-pay-button{margin-top:24px}
+.patteo-checkout-layout .checkout-summary .launch-notice{line-height:1.6}
+@media(max-width:600px){.patteo-payment-card{padding:20px 16px}.patteo-payment-card h2{font-size:24px}.patteo-payment-card #patteo-payment-form h3{font-size:16px;margin:26px 0 16px}}
