@@ -69,6 +69,10 @@
   document.getElementById('site-header').innerHTML=header();
   const main=document.getElementById('main');
   if(window.__PATTEO_BUILD || !main.children.length || page==='checkout' || params.has('couleur')) main.innerHTML=(renders[page]||home)();
+  if(page==='product'){
+    main.querySelector('.product-subtitle')?.remove();
+    main.querySelector('.purchase-note')?.remove();
+  }
   document.getElementById('site-footer').innerHTML=footer();
   document.getElementById('overlays').innerHTML=overlays();
   if(window.__PATTEO_BUILD){window.__PATTEO_CONFIG=SHOP;return;}

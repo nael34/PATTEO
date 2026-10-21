@@ -68,3 +68,8 @@ dialog{color:var(--ink);background:var(--cream);border:0;padding:0;box-shadow:0 
 .patteo-confirmation-card>.small-print{margin:20px 0;color:#687570}
 .patteo-confirmation-card>.button{margin-top:12px}
 @media(max-width:600px){.patteo-confirmation{padding:28px 0 64px}.patteo-confirmation-card{padding:24px 19px;border-radius:17px}.patteo-confirmation-item{gap:10px;font-size:12px}.patteo-confirmation-item>strong{font-size:12px}.patteo-order-reference{align-items:flex-start;flex-direction:column;gap:7px}.patteo-order-reference strong{text-align:left}}
+
+body[data-page="product"] .product-subtitle,
+body[data-page="product"] .purchase-note{display:none}
+
+body[data-page="product"] .product-info .price-line span{display:inline-flex;align-items:center;padding:9px 13px;border-radius:999px;background:#e8f0eb;color:#244f42;font-size:13px;font-weight:700;letter-spacing:.01em}
