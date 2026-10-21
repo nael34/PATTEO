@@ -135,7 +135,7 @@
     let activeCheckout=null;
     const loadStripe=()=>new Promise((resolve,reject)=>{
       if(window.Stripe)return resolve(window.Stripe);
-      const script=document.createElement('script');script.src='https://js.stripe.com/clover/stripe.js';script.onload=()=>resolve(window.Stripe);script.onerror=()=>reject(new Error('Stripe ne peut pas être chargé'));document.head.appendChild(script);
+      const script=document.createElement('script');script.src='https://js.stripe.com/v3/';script.onload=()=>resolve(window.Stripe);script.onerror=()=>reject(new Error('Stripe ne peut pas être chargé'));document.head.appendChild(script);
     });
     const sessionId=params.get('session_id');
     if(sessionId){status.textContent='Retour du paiement : consultez votre confirmation Stripe. Ne préparez aucune commande sans vérifier le paiement dans Stripe.';}
