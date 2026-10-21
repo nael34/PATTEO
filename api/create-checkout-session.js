@@ -1,9 +1,9 @@
-import { COLORS, DIMENSIONS, PRICES, getStripeTestConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from './_lib/stripe-test.js';
+import { COLORS, DIMENSIONS, PRICES, getStripeConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from './_lib/stripe-test.js';
 
 export default async function handler(req, res, dependencies = {}) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
-  const config = (dependencies.getConfig || getStripeTestConfig)();
-  if (config.error) return res.status(503).json({ error: 'Paiement de test indisponible', detail: config.error });
+  const config = (dependencies.getConfig || getStripeConfig)();
+  if (config.error) return res.status(503).json({ error: 'Paiement indisponible', detail: config.error });
 
   const cart = normalizeCart(req.body?.cart);
   if (!cart) return res.status(400).json({ error: 'Panier invalide' });
@@ -29,11 +29,11 @@ export default async function handler(req, res, dependencies = {}) {
         },
       })),
     });
-    if (!session.client_secret || session.livemode !== false) {
-      console.error('PATTEO: Stripe returned an invalid test Checkout Session.');
-      return res.status(502).json({ error: 'Session de paiement test invalide' });
+    if (!session.client_secret || session.livemode !== (config.mode === 'live')) {
+      console.error('PATTEO: Stripe returned a Checkout Session with an unexpected mode.');
+      return res.status(502).json({ error: 'Session de paiement invalide' });
     }
-    return res.status(200).json({ clientSecret: session.client_secret, publishableKey: config.publishableKey });
+    return res.status(200).json({ clientSecret: session.client_secret, publishableKey: config.publishableKey, mode: config.mode });
   } catch (error) {
     console.error('PATTEO: Checkout Session creation failed.', error?.type || 'Stripe error', error?.code || '');
     return res.status(502).json({ error: 'Création de la session de paiement impossible' });

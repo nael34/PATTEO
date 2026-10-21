@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import createCheckout from '../api/create-checkout-session.js';
 import sessionStatus from '../api/session-status.js';
 import webhook, { confirmationEmail } from '../api/stripe-webhook.js';
-import { formatCurrency, getStripeTestConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from '../api/_lib/stripe-test.js';
+import { formatCurrency, getStripeConfig, getStripeTestConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from '../api/_lib/stripe-test.js';
 
 function responseRecorder() {
   return {
@@ -15,15 +15,18 @@ function responseRecorder() {
   };
 }
 
-const eventPayload = type => JSON.stringify({
+const eventPayload = (type, livemode = false) => JSON.stringify({
   id: 'evt_test_pattee', object: 'event', api_version: '2026-08-26.dahlia',
-  created: Math.floor(Date.now() / 1000), livemode: false, type,
-  data: { object: { id: 'cs_test_pattee', object: 'checkout.session', livemode: false } },
+  created: Math.floor(Date.now() / 1000), livemode, type,
+  data: { object: { id: `cs_${livemode ? 'live' : 'test'}_pattee`, object: 'checkout.session', livemode } },
 });
 
-test('Stripe configuration accepts only explicit test-mode key formats', () => {
+test('Stripe configuration strictly separates test and live key formats', () => {
   assert.match(getStripeTestConfig({ STRIPE_MODE: 'test', STRIPE_SECRET_KEY: 'sk_test_example', STRIPE_PUBLISHABLE_KEY: 'pk_test_example' }).stripe.constructor.name, /Stripe/);
+  assert.match(getStripeConfig({ STRIPE_MODE: 'live', STRIPE_RESTRICTED_KEY_LIVE: 'rk_live_example', STRIPE_PUBLISHABLE_KEY_LIVE: 'pk_live_example' }).stripe.constructor.name, /Stripe/);
   assert.equal(getStripeTestConfig({ STRIPE_MODE: 'live', STRIPE_SECRET_KEY: 'sk_live_example', STRIPE_PUBLISHABLE_KEY: 'pk_live_example' }).error !== undefined, true);
+  assert.equal(getStripeConfig({ STRIPE_MODE: 'live', STRIPE_RESTRICTED_KEY_LIVE: 'rk_test_example', STRIPE_PUBLISHABLE_KEY_LIVE: 'pk_live_example' }).error !== undefined, true);
+  assert.equal(getStripeConfig({ STRIPE_MODE: 'live', STRIPE_RESTRICTED_KEY_LIVE: 'rk_live_example', STRIPE_PUBLISHABLE_KEY_LIVE: 'pk_test_example' }).error !== undefined, true);
   assert.equal(getStripeTestConfig({ STRIPE_MODE: 'test', STRIPE_SECRET_KEY: 'sk_live_example', STRIPE_PUBLISHABLE_KEY: 'pk_test_example' }).error !== undefined, true);
   assert.equal(getStripeTestConfig({ STRIPE_MODE: 'test', STRIPE_SECRET_KEY: 'sk_test_example', STRIPE_PUBLISHABLE_KEY: 'pk_live_example' }).error !== undefined, true);
   assert.equal(getStripeTestConfig({ STRIPE_SECRET_KEY: 'sk_test_example', STRIPE_PUBLISHABLE_KEY: 'pk_test_example' }).error !== undefined, true);
@@ -39,7 +42,7 @@ test('server-authoritative cart validation merges variants and rejects tampering
 
 test('order and integration references are stable-format identifiers', () => {
   assert.equal(makeOrderNumber(new Date('2026-10-21T12:00:00Z'), () => 0), 'PT-20261021-AAAAAAAA');
-  assert.equal(makeIntegrationIdentifier(() => 0), 'patteo-test-aaaaaaaa');
+  assert.equal(makeIntegrationIdentifier(() => 0), 'patteo-aaaaaaaa');
   assert.match(formatCurrency(2390, 'EUR'), /23,90/);
 });
 
@@ -47,7 +50,7 @@ test('checkout creates a test-only session with server prices and order metadata
   let created;
   const res = responseRecorder();
   await createCheckout({ method: 'POST', body: { cart: [{ color: 'jaune', size: 'xs', qty: 2 }] } }, res, {
-    getConfig: () => ({ publishableKey: 'pk_test_fixture', stripe: { checkout: { sessions: { create: async value => { created = value; return { id: 'cs_test_pattee', livemode: false, client_secret: 'cs_test_secret' }; } } } } }),
+    getConfig: () => ({ mode: 'test', publishableKey: 'pk_test_fixture', stripe: { checkout: { sessions: { create: async value => { created = value; return { id: 'cs_test_pattee', livemode: false, client_secret: 'cs_test_secret' }; } } } } }),
   });
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.publishableKey, 'pk_test_fixture');
@@ -55,7 +58,7 @@ test('checkout creates a test-only session with server prices and order metadata
   assert.equal(created.ui_mode, 'elements');
   assert.equal(created.line_items[0].price_data.unit_amount, 2390);
   assert.equal(created.line_items[0].quantity, 2);
-  assert.match(created.integration_identifier, /^patteo-test-[a-z]{8}$/);
+  assert.match(created.integration_identifier, /^patteo-[a-z]{8}$/);
   assert.match(created.metadata.order_number, /^PT-2026\d{4}-[A-Z]{8}$/);
   assert.equal(created.shipping_address_collection.allowed_countries.includes('FR'), true);
 });
@@ -115,10 +118,10 @@ test('return page builds a detailed recap only from a paid test session', async 
   assert.match(res.body.items[1].unitLabel, /28,40/);
 });
 
-test('return page rejects live Checkout Session IDs', async () => {
+test('return page rejects live Checkout Session IDs in test mode', async () => {
   const res = responseRecorder();
-  await sessionStatus({ method: 'GET', query: { session_id: 'cs_live_not_allowed' } }, res, { getConfig: () => { throw new Error('must not initialize'); } });
-  assert.equal(res.statusCode, 400);
+  await sessionStatus({ method: 'GET', query: { session_id: 'cs_live_not_allowed' } }, res, { getConfig: () => ({ mode: 'test' }) });
+  assert.equal(res.statusCode, 404);
 });
 
 test('return page refuses a live object even when passed a test-shaped session ID', async () => {
@@ -205,6 +208,32 @@ test('webhook rejects invalid signatures before touching Stripe or Resend', asyn
   } finally {
     oldMode === undefined ? delete process.env.STRIPE_MODE : process.env.STRIPE_MODE = oldMode;
     oldWebhookSecret === undefined ? delete process.env.STRIPE_WEBHOOK_SECRET : process.env.STRIPE_WEBHOOK_SECRET = oldWebhookSecret;
+  }
+});
+
+test('live webhook sends a real-order confirmation only for a Stripe-paid live session', async () => {
+  const keys = ['STRIPE_MODE', 'STRIPE_WEBHOOK_SECRET_LIVE', 'RESEND_API_KEY', 'RESEND_FROM_EMAIL'];
+  const previous = Object.fromEntries(keys.map(key => [key, process.env[key]]));
+  Object.assign(process.env, { STRIPE_MODE: 'live', STRIPE_WEBHOOK_SECRET_LIVE: 'whsec_live_fixture', RESEND_API_KEY: 're_fixture', RESEND_FROM_EMAIL: 'PATTEO <orders@example.test>' });
+  const stripe = new Stripe('sk_test_fixture');
+  const session = { id: 'cs_live_pattee', livemode: true, status: 'complete', payment_status: 'paid', amount_total: 2390, currency: 'eur', customer_details: { email: 'buyer@example.test' }, metadata: { order_number: 'PT-20261021-ABCDEFGH' } };
+  stripe.checkout.sessions.retrieve = async () => session;
+  stripe.checkout.sessions.listLineItems = async () => ({ data: [{ description: 'Tapis Patteo XS', quantity: 1, amount_subtotal: 2390, amount_total: 2390 }] });
+  stripe.checkout.sessions.update = async () => session;
+  let sent = 0;
+  const payload = eventPayload('checkout.session.completed', true);
+  const signature = Stripe.webhooks.generateTestHeaderString({ payload, secret: process.env.STRIPE_WEBHOOK_SECRET_LIVE });
+  const res = responseRecorder();
+  try {
+    await webhook({ method: 'POST', headers: { 'stripe-signature': signature }, body: Buffer.from(payload) }, res, {
+      getConfig: () => ({ mode: 'live', stripe }),
+      sendEmail: async options => { sent++; assert.match(options.headers['Idempotency-Key'], /^patteo-confirmation\/cs_live_/); assert.match(JSON.parse(options.body).text, /Votre paiement a bien été reçu/); return new Response(JSON.stringify({ id: 'email_live_fixture' }), { status: 200 }); },
+    });
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.emailed, true);
+    assert.equal(sent, 1);
+  } finally {
+    for (const key of keys) previous[key] === undefined ? delete process.env[key] : process.env[key] = previous[key];
   }
 });
 

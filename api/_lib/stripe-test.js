@@ -5,18 +5,27 @@ export const PRICES = Object.freeze({ xs: 2390, s: 2540, m: 2690, l: 2840, xl: 2
 export const COLORS = Object.freeze({ gris: 'Gris galet', bleu: 'Bleu balade', jaune: 'Jaune soleil' });
 export const DIMENSIONS = Object.freeze({ xs: '30 × 50 cm', s: '40 × 60 cm', m: '45 × 70 cm', l: '50 × 80 cm', xl: '60 × 90 cm' });
 
-export function getStripeTestConfig(env = process.env) {
-  if (env.STRIPE_MODE !== 'test') return { error: 'STRIPE_MODE doit être exactement « test ».' };
-  const secretKey = env.STRIPE_SECRET_KEY;
-  const publishableKey = env.STRIPE_PUBLISHABLE_KEY;
-  if (!secretKey?.startsWith('sk_test_') || !publishableKey?.startsWith('pk_test_')) {
-    return { error: 'Les clés Stripe de test sont absentes ou invalides.' };
-  }
+export function getStripeConfig(env = process.env) {
+  const mode = env.STRIPE_MODE;
+  if (mode !== 'test' && mode !== 'live') return { error: 'STRIPE_MODE doit être exactement « test » ou « live ».' };
+  const secretKey = mode === 'live' ? env.STRIPE_RESTRICTED_KEY_LIVE : env.STRIPE_SECRET_KEY;
+  const publishableKey = mode === 'live' ? env.STRIPE_PUBLISHABLE_KEY_LIVE : env.STRIPE_PUBLISHABLE_KEY;
+  const validSecret = mode === 'live'
+    ? (secretKey?.startsWith('rk_live_') || secretKey?.startsWith('sk_live_'))
+    : (secretKey?.startsWith('rk_test_') || secretKey?.startsWith('sk_test_'));
+  const validPublishable = publishableKey?.startsWith(mode === 'live' ? 'pk_live_' : 'pk_test_');
+  if (!validSecret || !validPublishable) return { error: `Les clés Stripe ${mode === 'live' ? 'live' : 'de test'} sont absentes ou invalides.` };
   return {
     stripe: new Stripe(secretKey, { apiVersion: STRIPE_API_VERSION, maxNetworkRetries: 2, timeout: 15000 }),
     publishableKey,
+    mode,
   };
 }
+
+export const getStripeTestConfig = (env = process.env) => {
+  const config = getStripeConfig(env);
+  return config.mode === 'test' ? config : { error: 'Cette opération nécessite une configuration Stripe de test.' };
+};
 
 export function normalizeCart(cart) {
   if (!Array.isArray(cart) || cart.length < 1 || cart.length > 15) return null;
@@ -36,7 +45,7 @@ const LETTERS = 'abcdefghijklmnopqrstuvwxyz';
 export function makeIntegrationIdentifier(random = Math.random) {
   let suffix = '';
   for (let i = 0; i < 8; i++) suffix += LETTERS[Math.floor(random() * LETTERS.length)];
-  return `patteo-test-${suffix}`;
+  return `patteo-${suffix}`;
 }
 
 export function makeOrderNumber(now = new Date(), random = Math.random) {

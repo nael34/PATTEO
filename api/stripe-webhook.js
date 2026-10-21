@@ -1,4 +1,4 @@
-import { formatCurrency, getStripeTestConfig } from './_lib/stripe-test.js';
+import { formatCurrency, getStripeConfig } from './_lib/stripe-test.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -39,10 +39,10 @@ async function readRawBody(req) {
 
 export default async function handler(req, res, dependencies = {}) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
-  const getConfig = dependencies.getConfig || getStripeTestConfig;
+  const getConfig = dependencies.getConfig || getStripeConfig;
   const configResult = getConfig();
-  if (configResult.error) return res.status(503).json({ error: 'Webhook de test indisponible' });
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (configResult.error) return res.status(503).json({ error: 'Webhook indisponible' });
+  const secret = configResult.mode === 'live' ? process.env.STRIPE_WEBHOOK_SECRET_LIVE : process.env.STRIPE_WEBHOOK_SECRET;
   const resendKey = process.env.RESEND_API_KEY;
   if (!secret?.startsWith('whsec_')) return res.status(503).json({ error: 'Signature webhook non configurée' });
 
@@ -54,19 +54,19 @@ export default async function handler(req, res, dependencies = {}) {
     return res.status(400).json({ error: 'Signature Stripe invalide' });
   }
 
-  if (event.livemode !== false) return res.status(200).json({ received: true, ignored: 'non-test event' });
+  if (event.livemode !== (configResult.mode === 'live')) return res.status(200).json({ received: true, ignored: 'mode mismatch' });
   if (!['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type)) {
     return res.status(200).json({ received: true, ignored: 'event type' });
   }
 
   const sessionId = event.data?.object?.id;
-  if (typeof sessionId !== 'string' || !/^cs_test_[A-Za-z0-9_]+$/.test(sessionId)) {
-    return res.status(400).json({ error: 'Session test invalide' });
+  if (typeof sessionId !== 'string' || !new RegExp(`^cs_${configResult.mode === 'live' ? 'live' : 'test'}_[A-Za-z0-9_]+$`).test(sessionId)) {
+    return res.status(400).json({ error: 'Session invalide' });
   }
   try {
     const stripe = configResult.stripe;
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (session.livemode !== false || session.status !== 'complete' || session.payment_status !== 'paid') {
+    if (session.livemode !== (configResult.mode === 'live') || session.status !== 'complete' || session.payment_status !== 'paid') {
       return res.status(200).json({ received: true, ignored: 'payment not paid' });
     }
     if (session.metadata?.confirmation_email_sent_at) {
@@ -75,7 +75,7 @@ export default async function handler(req, res, dependencies = {}) {
 
     const recipient = session.customer_details?.email || session.customer_email;
     if (!recipient) {
-      console.error('PATTEO: paid test session has no customer email.', session.id);
+      console.error('PATTEO: paid session has no customer email.', session.id);
       return res.status(200).json({ received: true, emailSkipped: 'missing customer email' });
     }
     if (!resendKey?.startsWith('re_')) return res.status(503).json({ error: 'Service e-mail non configuré' });
@@ -117,7 +117,7 @@ export default async function handler(req, res, dependencies = {}) {
     });
     return res.status(200).json({ received: true, emailed: true });
   } catch (error) {
-    console.error('PATTEO: paid test webhook processing failed.', error?.type || 'provider error', error?.code || '');
+    console.error('PATTEO: paid webhook processing failed.', error?.type || 'provider error', error?.code || '');
     return res.status(502).json({ error: 'Traitement de la commande à réessayer' });
   }
 }

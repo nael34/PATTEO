@@ -9,7 +9,7 @@ for(const file of files){
   assert.equal((html.match(/<h1[ >]/g)||[]).length,1,`${file}: one H1`);
   assert.match(html,/<html lang="fr">/);
   assert.match(html,/name="viewport"/);
-  assert.match(html,/noindex,nofollow/);
+  assert.match(html,/name="robots" content="index,follow/);
   for(const [,url] of html.matchAll(/(?:src|href)="(\/[^"#?]*)[^" ]*"/g)){
     const f=path.join(root,url.endsWith('/')?url+'index.html':url);
     const info=await stat(f);assert.ok(info.size>0,`Empty file ${f}`);
@@ -18,6 +18,8 @@ for(const file of files){
 }
 for(const asset of ['hero.webp','gris.webp','bleu.webp','jaune.webp','logo.png'])assert.ok((await stat(path.join(root,'assets',asset))).size>1000);
 const code=await readFile(path.join(root,'app.js'),'utf8');
-assert.match(code,/checkoutEnabled: false/);
-assert.ok(!code.includes('pk_live_')&&!code.includes('sk_live_'));
-console.log('OK assets, preview checkout, no live Stripe keys');
+assert.match(code,/checkoutEnabled: true/);
+assert.ok(!/sk_live_[A-Za-z0-9]{16,}/.test(code));
+assert.match(await readFile(path.join(root,'robots.txt'),'utf8'),/Allow: \/[\s\S]*Sitemap:/);
+assert.match(await readFile(path.join(root,'sitemap.xml'),'utf8'),/https:\/\/patteo\.vercel\.app\/produit\//);
+console.log('OK assets, crawlable pages, sitemap, no embedded Stripe secret');
