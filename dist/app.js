@@ -131,7 +131,7 @@
     const status=document.getElementById('patteo-payment-status');
     const form=document.getElementById('patteo-payment-form');
     const error=document.getElementById('patteo-payment-error');
-    const publicKey='pk_test_51USzrPLDYZRSe78r4LKj5wHbEGPjHrHZutdrkiGCCTtkIjGKoptoJGjvJ9dNJxCV9wNVnjNAg9HwAtvP6E2JJMvZ00TMjavgjk';
+    let livePayments=false;
     let activeCheckout=null;
     const loadStripe=()=>new Promise((resolve,reject)=>{
       if(window.Stripe)return resolve(window.Stripe);
@@ -147,19 +147,24 @@
         if(!response.ok||!data.clientSecret)throw Error(data.detail||data.error||'Paiement indisponible');
         const Stripe=await loadStripe();
         if(!Stripe)throw Error('Stripe indisponible');
-        const stripe=Stripe(publicKey);
+        livePayments=Boolean(data.live);
+        if(livePayments){
+          document.querySelectorAll('.patteo-payment-card .small-print').forEach(el=>el.textContent='Paiement sécurisé directement sur Patteo.');
+          document.querySelectorAll('.launch-notice').forEach(el=>el.remove());
+        }
+        const stripe=Stripe(data.publishableKey);
         activeCheckout=stripe.initCheckoutElementsSdk({clientSecret:data.clientSecret,adaptivePricing:{allowed:true},elementsOptions:{appearance:{theme:'stripe',variables:{colorPrimary:'#173e50',borderRadius:'12px'}}}});
         const loaded=await activeCheckout.loadActions();
         if(loaded.type!=='success')throw Error(loaded.error?.message||'Initialisation Stripe impossible');
         const stripeTotal=loaded.actions.getSession()?.total?.total?.amount;
         const payButton=document.getElementById('patteo-pay-button');
-        if(stripeTotal)payButton.textContent='Payer '+stripeTotal+' (test)';
-        activeCheckout.on('change',session=>{if(session?.total?.total?.amount)payButton.textContent='Payer '+session.total.total.amount+' (test)';payButton.disabled=!session.canConfirm;});
+        if(stripeTotal)payButton.textContent='Payer '+stripeTotal+(livePayments?'':' (test)');
+        activeCheckout.on('change',session=>{if(session?.total?.total?.amount)payButton.textContent='Payer '+session.total.total.amount+(livePayments?'':' (test)');payButton.disabled=!session.canConfirm;});
         activeCheckout.createContactDetailsElement().mount('#patteo-contact');
         activeCheckout.createShippingAddressElement().mount('#patteo-shipping');
         activeCheckout.createCurrencySelectorElement().mount('#patteo-currency-selector');
         activeCheckout.createPaymentElement().mount('#patteo-payment-element');
-        status.textContent='Paiement de test — aucun prélèvement réel.';
+        status.textContent=livePayments?'Paiement sécurisé — un prélèvement réel sera effectué après confirmation.':'Paiement de test — aucun prélèvement réel.';
         form.hidden=false;
       })().catch(e=>{status.textContent=e.message||'Impossible de charger le paiement';});
       form.addEventListener('submit',async e=>{
