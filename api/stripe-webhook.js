@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+export const config = { api: { bodyParser: false } };
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const euros = cents => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format((Number(cents)||0)/100);
