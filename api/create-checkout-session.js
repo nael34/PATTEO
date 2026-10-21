@@ -27,7 +27,7 @@ export default async function handler(req,res) {
     params.set(p+'[quantity]',String(item.qty));
   }
   try {
-    const response=await fetch('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()});
+    const response=await fetch('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/x-www-form-urlencoded','Stripe-Version':'2025-09-30.clover'},body:params.toString()});
     const data=await response.json();
     if(!response.ok||!data.client_secret) return res.status(502).json({error:'Impossible de créer la session Stripe'});
     return res.status(200).json({clientSecret:data.client_secret});
