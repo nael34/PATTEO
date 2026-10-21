@@ -1,5 +1,14 @@
 # Vérification — 21 octobre 2026
 
+## Publication live — commit `aab8cf0`
+
+- Production Vercel prête et liée à la branche `main`; preview/development gardent Stripe test.
+- Production Stripe live activée avec webhook signé configuré. Un panier vide renvoie HTTP 400 avant la création d’une session (contrôle sans paiement) ; webhook avec signature invalide renvoie HTTP 400, sans appeler Resend.
+- Les confirmations Resend ne sont envoyées qu’après validation Stripe d’une session payée. Les tests locaux couvrent test et live simulés ; aucun débit réel ni e-mail de commande client n’a été simulé.
+- `robots.txt`, sitemap, robots meta, URL canonique et images Open Graph vérifiés sur le site public (HTTP 200). La page commande reste `noindex`.
+- `npm run check` : 14 tests réussis. Aucun tag Google Ads n’est actif ; l’événement `purchase` est prêt dans `dataLayer`, mais son identifiant/label et la validation du consentement restent à fournir.
+- À terminer avec le client avant les publicités : informations légales/CGV/retours/médiateur, contrôle réel du parcours avec un client, photos authentiques et identifiant de conversion Google Ads.
+
 ## Mise à jour badges et gros plan
 
 - Badges SVG locaux : PayPal, Apple Pay, Google Pay, Cartes Bancaires, Visa et Mastercard. Mention « moyens de paiement prévus » car le paiement reste désactivé.
