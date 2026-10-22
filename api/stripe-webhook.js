@@ -18,8 +18,8 @@ function confirmationEmail(session, items) {
     const unit = formatCurrency(Math.round(Number(item.amount_subtotal || 0) / quantity), currency);
     const subtotal = formatCurrency(item.amount_total, currency);
     return `<tr><td style="padding:20px 0;border-bottom:1px solid #e4e4dc;color:#173e50;font-size:14px;line-height:1.6"><strong style="font-size:15px">${name}</strong><br><span style="color:#66777b">${quantity} × ${unit}</span></td><td align="right" style="padding:20px 0;border-bottom:1px solid #e4e4dc;color:#173e50;font-weight:bold;white-space:nowrap">${subtotal}</td></tr>`;
-  }).join('');
-  const textRows = items.map(item => `${item.description || 'Article Patteo'} — ${item.quantity || 1} × ${formatCurrency(Math.round(Number(item.amount_subtotal || 0) / Number(item.quantity || 1)), currency)} : ${formatCurrency(item.amount_total, currency)}`).join('\n');
+  }).join('') + '<tr><td colspan="2" style="padding:20px 0 4px;color:#50616a;font-size:13px;line-height:1.7"><strong>Livraison</strong><br>Préparation : 1 à 3 jours. Acheminement : 8 à 18 jours après expédition.</td></tr>';
+  const textRows = items.map(item => `${item.description || 'Article Patteo'} — ${item.quantity || 1} × ${formatCurrency(Math.round(Number(item.amount_subtotal || 0) / Number(item.quantity || 1)), currency)} : ${formatCurrency(item.amount_total, currency)}`).join('\n') + '\n\nLivraison : préparation sous 1 à 3 jours, puis acheminement sous 8 à 18 jours après expédition.';
   const heading = test ? 'Votre commande test est confirmée' : 'Votre commande est confirmée';
   return {
     orderNumber,

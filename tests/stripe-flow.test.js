@@ -245,4 +245,6 @@ test('confirmation email escapes item names and includes order and totals', () =
   assert.doesNotMatch(email.html, /<script>/);
   assert.match(email.html, /&lt;script&gt;/);
   assert.match(email.text, /23,90/);
+  assert.match(email.html, /Préparation : 1 à 3 jours\. Acheminement : 8 à 18 jours après expédition\./);
+  assert.match(email.text, /8 à 18 jours après expédition/);
 });

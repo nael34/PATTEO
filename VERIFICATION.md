@@ -11,7 +11,7 @@
 
 ## Mise à jour badges et gros plan
 
-- Badges SVG locaux : PayPal, Apple Pay, Google Pay, Cartes Bancaires, Visa et Mastercard. Mention « moyens de paiement prévus » car le paiement reste désactivé.
+- Badges SVG locaux : PayPal, Apple Pay, Google Pay, Cartes Bancaires, Visa et Mastercard. Le paiement Stripe est activé ; le libellé public indique désormais « Paiement sécurisé par Stripe ».
 - Présence dans la fiche produit, le tiroir panier et le récapitulatif.
 - Gros plan IA de la chenille grise dans la galerie, agrandissable avec le mécanisme existant, et dans une section dédiée.
 - Pré-rendu, syntaxe JavaScript, ressources locales et vérification des différences réussis après l’ajout.
