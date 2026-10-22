@@ -121,7 +121,7 @@
   function addToCart(){const i=cart.find(i=>i.color===color&&i.size===size);if((i?.qty||0)+qty>10){announce('Maximum 10 tapis par taille et coloris.');return;}if(i)i.qty+=qty;else cart.push({color,size,qty});saveCart();trackMeta('AddToCart',{content_ids:[`patteo_${color}_${size}`],contents:[{id:`patteo_${color}_${size}`,quantity:qty,item_price:selectedPrice()}],content_type:'product',value:qty*selectedPrice(),currency:'EUR'});document.getElementById('cart-dialog').showModal();}
   const legal={
     legal:['Mentions légales','Les informations légales de PATTEO sont à compléter avant toute campagne ou commande.','L’identité juridique du vendeur, ses coordonnées, ses références d’immatriculation et les informations d’hébergement doivent être renseignées. Ces éléments restent à valider avec le vendeur.'],
-    privacy:['Confidentialité','Vos choix de confidentialité sont respectés.','Le panier est conservé localement. Lors du paiement, les coordonnées et l’adresse de livraison sont transmises à Stripe pour traiter la commande ; un e-mail de confirmation est envoyé via Resend après paiement réussi. Si vous envoyez un avis ou une photo, votre prénom, votre texte et l’image (réduite et débarrassée de ses métadonnées par le navigateur) sont transmis à Resend et à notre boîte de réception pour examen ; rien n’est publié automatiquement. Pour demander le retrait d’une contribution, écrivez à commandes@montpellier-ia.dev. Avec votre accord uniquement, le Pixel Meta (Meta Platforms Ireland Ltd.) utilise des cookies/traceurs pour mesurer les pages consultées, la fiche produit, l’ajout au panier, le début du paiement et les achats confirmés afin de mesurer les publicités. Vous pouvez refuser ou retirer cet accord via « Préférences cookies » en bas de page ; le refus n’empêche pas la commande.'],
+    privacy:['Confidentialité','Vos choix de confidentialité sont respectés.','Le panier est conservé localement. Lors du paiement, les coordonnées et l’adresse de livraison sont transmises à Stripe pour traiter la commande ; un e-mail de confirmation est envoyé via Resend après paiement réussi. Si vous envoyez un avis ou une photo, votre prénom, votre texte et l’image (réduite et débarrassée de ses métadonnées par le navigateur) sont transmis à Resend et à notre boîte de réception pour examen ; rien n’est publié automatiquement. Pour demander le retrait d’une contribution, écrivez à commandes@montpellier-ia.dev. Avec votre accord uniquement, PATTEO transmet à Meta (Meta Platforms Ireland Ltd.) les événements de navigation via le Pixel et l’événement d’achat confirmé via l’API Conversions. Pour rapprocher cet achat d’une publicité, Meta reçoit également les identifiants publicitaires du navigateur disponibles et l’adresse e-mail sous forme hachée. Vous pouvez refuser ou retirer cet accord via « Préférences cookies » en bas de page ; le refus n’empêche pas la commande.'],
     returns:['Retours','Les modalités de retour doivent être définies et publiées avant la vente.','L’adresse de retour, les modalités, les frais éventuels, les délais et le médiateur de la consommation restent à préciser avec le vendeur. Les conditions du fournisseur ne constituent pas automatiquement celles de la boutique.'],
     terms:['Conditions de vente','Le paiement en ligne est activé ; les conditions contractuelles de vente restent à finaliser.','Les conditions de vente, les informations fiscales, les délais de livraison, les garanties et les retours doivent être validés et publiés avant toute campagne commerciale.']
   };
@@ -135,7 +135,8 @@
     (function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments);};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=true;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=true;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);})(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
     window.fbq('init',META_PIXEL_ID);window.fbq('track','PageView');
   };
-  const trackMeta=(name,params)=>{if(!marketingAllowed())return;ensureMetaPixel();window.fbq?.('track',name,params);};
+  const readCookie=name=>{const match=document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));try{return decodeURIComponent(match?.[1]||'');}catch{return '';}};
+  const trackMeta=(name,params,eventID)=>{if(!marketingAllowed())return;ensureMetaPixel();if(eventID)window.fbq?.('track',name,params,{eventID});else window.fbq?.('track',name,params);};
   const cookieBanner=document.getElementById('cookie-consent');
   let savedConsent=null;try{savedConsent=localStorage.getItem(consentKey);}catch{}
   if(cookieBanner&&!['granted','denied'].includes(savedConsent))cookieBanner.hidden=false;
@@ -218,7 +219,7 @@
         if(data.mode==='live'&&marketingAllowed()){
           const metaPurchaseKey=`patteo-meta-purchase-sent/${data.orderNumber}`;
           let metaPurchaseSent=false;try{metaPurchaseSent=localStorage.getItem(metaPurchaseKey)==='1';}catch{}
-          if(!metaPurchaseSent){trackMeta('Purchase',{content_ids:data.items.map(item=>item.name),contents:data.items.map(item=>({id:item.name,quantity:item.quantity,item_price:item.unitAmount/100})),content_type:'product',value:data.total/100,currency:String(data.currency||'EUR').toUpperCase()});try{localStorage.setItem(metaPurchaseKey,'1');}catch{}}
+          if(!metaPurchaseSent){trackMeta('Purchase',{content_ids:data.items.map(item=>item.name),contents:data.items.map(item=>({id:item.name,quantity:item.quantity,item_price:item.unitAmount/100})),content_type:'product',value:data.total/100,currency:String(data.currency||'EUR').toUpperCase()},data.metaEventId);try{localStorage.setItem(metaPurchaseKey,'1');}catch{}}
         }
       }
       cart=[];try{localStorage.removeItem('patteo-cart-v1');}catch{}document.querySelectorAll('.cart-count').forEach(el=>el.textContent='0');
@@ -243,7 +244,8 @@
     else if(cart.length){
       status.textContent='Chargement du paiement sécurisé…';
       (async()=>{
-        const response=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cart})});
+        const marketingConsent=marketingAllowed();
+        const response=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cart,marketingConsent,metaFbp:marketingConsent?readCookie('_fbp'):'',metaFbc:marketingConsent?readCookie('_fbc'):''})});
         const data=await response.json();
         if(!response.ok||!data.clientSecret)throw Error(data.detail||data.error||'Paiement indisponible');
         const Stripe=await loadStripe();

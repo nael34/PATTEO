@@ -1,4 +1,5 @@
 import { formatCurrency, getStripeConfig } from './_lib/stripe-test.js';
+import { sendMetaPurchase } from './_lib/meta-capi.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -44,6 +45,7 @@ export default async function handler(req, res, dependencies = {}) {
   if (configResult.error) return res.status(503).json({ error: 'Webhook indisponible' });
   const secret = configResult.mode === 'live' ? process.env.STRIPE_WEBHOOK_SECRET_LIVE : process.env.STRIPE_WEBHOOK_SECRET;
   const resendKey = process.env.RESEND_API_KEY;
+  const metaAccessToken = process.env.META_CAPI_ACCESS_TOKEN;
   if (!secret?.startsWith('whsec_')) return res.status(503).json({ error: 'Signature webhook non configurée' });
 
   let event;
@@ -69,53 +71,64 @@ export default async function handler(req, res, dependencies = {}) {
     if (session.livemode !== (configResult.mode === 'live') || session.status !== 'complete' || session.payment_status !== 'paid') {
       return res.status(200).json({ received: true, ignored: 'payment not paid' });
     }
-    if (session.metadata?.confirmation_email_sent_at) {
-      return res.status(200).json({ received: true, duplicate: true });
-    }
+    const shouldSendMeta = configResult.mode === 'live' && !!metaAccessToken &&
+      session.metadata?.meta_marketing_consent === 'granted' && !!session.metadata?.meta_event_id && !session.metadata?.meta_capi_sent_at;
+    const shouldSendEmail = !session.metadata?.confirmation_email_sent_at && !session.metadata?.confirmation_email_skipped;
+    if (!shouldSendMeta && !shouldSendEmail) return res.status(200).json({ received: true, duplicate: true });
 
-    const recipient = session.customer_details?.email || session.customer_email;
-    if (!recipient) {
-      console.error('PATTEO: paid session has no customer email.', session.id);
-      return res.status(200).json({ received: true, emailSkipped: 'missing customer email' });
-    }
-    if (!resendKey?.startsWith('re_')) return res.status(503).json({ error: 'Service e-mail non configuré' });
     const { data: items } = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
-    const email = confirmationEmail(session, items);
-    const send = dependencies.sendEmail || (async payload => fetch('https://api.resend.com/emails', payload));
-    const response = await send({
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendKey}`,
-        'Content-Type': 'application/json',
-        'Idempotency-Key': `patteo-confirmation/${session.id}`,
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'PATTEO <commandes@montpellier-ia.dev>',
-        to: [recipient],
-        subject: email.subject,
-        html: email.html,
-        text: email.text,
-      }),
-    });
-    if (!response.ok) {
-      console.error('PATTEO: Resend rejected confirmation email.', response.status);
-      return res.status(502).json({ error: 'Envoi de la confirmation impossible' });
-    }
-    let resendResult;
-    try { resendResult = await response.json(); } catch { resendResult = {}; }
-    if (!resendResult.id) {
-      console.error('PATTEO: Resend response did not contain an email ID.');
-      return res.status(502).json({ error: 'Confirmation e-mail non vérifiable' });
+    if (shouldSendMeta) {
+      const sendMeta = dependencies.sendMetaPurchase || sendMetaPurchase;
+      await sendMeta({ session, items, accessToken: metaAccessToken, fetchImpl: dependencies.fetchMeta || fetch });
+      session.metadata = { ...session.metadata, meta_capi_sent_at: new Date().toISOString() };
+      await stripe.checkout.sessions.update(session.id, { metadata: session.metadata });
     }
 
-    await stripe.checkout.sessions.update(session.id, {
-      metadata: {
-        ...session.metadata,
-        confirmation_email_sent_at: new Date().toISOString(),
-        confirmation_email_id: resendResult.id,
-      },
-    });
-    return res.status(200).json({ received: true, emailed: true });
+    let emailed = false;
+    if (shouldSendEmail) {
+      const recipient = session.customer_details?.email || session.customer_email;
+      if (!recipient) {
+        console.error('PATTEO: paid session has no customer email.', session.id);
+        session.metadata = { ...session.metadata, confirmation_email_skipped: 'missing_customer_email' };
+      } else {
+        if (!resendKey?.startsWith('re_')) return res.status(503).json({ error: 'Service e-mail non configuré' });
+        const email = confirmationEmail(session, items);
+        const send = dependencies.sendEmail || (async payload => fetch('https://api.resend.com/emails', payload));
+        const response = await send({
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${resendKey}`,
+            'Content-Type': 'application/json',
+            'Idempotency-Key': `patteo-confirmation/${session.id}`,
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM_EMAIL || 'PATTEO <commandes@montpellier-ia.dev>',
+            to: [recipient],
+            subject: email.subject,
+            html: email.html,
+            text: email.text,
+          }),
+        });
+        if (!response.ok) {
+          console.error('PATTEO: Resend rejected confirmation email.', response.status);
+          return res.status(502).json({ error: 'Envoi de la confirmation impossible' });
+        }
+        let resendResult;
+        try { resendResult = await response.json(); } catch { resendResult = {}; }
+        if (!resendResult.id) {
+          console.error('PATTEO: Resend response did not contain an email ID.');
+          return res.status(502).json({ error: 'Confirmation e-mail non vérifiable' });
+        }
+        session.metadata = {
+          ...session.metadata,
+          confirmation_email_sent_at: new Date().toISOString(),
+          confirmation_email_id: resendResult.id,
+        };
+        emailed = true;
+      }
+      await stripe.checkout.sessions.update(session.id, { metadata: session.metadata });
+    }
+    return res.status(200).json({ received: true, emailed, metaSent: shouldSendMeta });
   } catch (error) {
     console.error('PATTEO: paid webhook processing failed.', error?.type || 'provider error', error?.code || '');
     return res.status(502).json({ error: 'Traitement de la commande à réessayer' });

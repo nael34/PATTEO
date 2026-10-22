@@ -35,6 +35,7 @@ export default async function handler(req, res, dependencies = {}) {
       state: 'paid',
       mode: config.mode,
       orderNumber: session.metadata?.order_number || `PT-${id.slice(-10).toUpperCase()}`,
+      metaEventId: session.metadata?.meta_marketing_consent === 'granted' ? session.metadata?.meta_event_id || null : null,
       currency,
       currencyLabel: currency,
       total: Number(session.amount_total || 0),

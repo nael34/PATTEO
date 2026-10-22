@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import createCheckout from '../api/create-checkout-session.js';
 import sessionStatus from '../api/session-status.js';
 import webhook, { confirmationEmail } from '../api/stripe-webhook.js';
+import { sendMetaPurchase } from '../api/_lib/meta-capi.js';
 import { formatCurrency, getStripeConfig, getStripeTestConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from '../api/_lib/stripe-test.js';
 
 function responseRecorder() {
@@ -60,6 +61,8 @@ test('checkout creates a test-only session with server prices and order metadata
   assert.equal(created.line_items[0].quantity, 2);
   assert.match(created.integration_identifier, /^patteo-[a-z]{8}$/);
   assert.match(created.metadata.order_number, /^PT-2026\d{4}-[A-Z]{8}$/);
+  assert.equal(created.metadata.meta_marketing_consent, undefined);
+  assert.equal(res.body.metaEventId, null);
   assert.equal(created.shipping_address_collection.allowed_countries.includes('FR'), true);
 });
 
@@ -235,6 +238,89 @@ test('live webhook sends a real-order confirmation only for a Stripe-paid live s
   } finally {
     for (const key of keys) previous[key] === undefined ? delete process.env[key] : process.env[key] = previous[key];
   }
+});
+
+test('Meta CAPI Purchase is consent-gated, deduplicated and sent only once for a live paid order', async () => {
+  const keys = ['STRIPE_MODE', 'STRIPE_WEBHOOK_SECRET_LIVE', 'RESEND_API_KEY', 'META_CAPI_ACCESS_TOKEN'];
+  const previous = Object.fromEntries(keys.map(key => [key, process.env[key]]));
+  Object.assign(process.env, { STRIPE_MODE: 'live', STRIPE_WEBHOOK_SECRET_LIVE: 'whsec_live_fixture', RESEND_API_KEY: 're_fixture', META_CAPI_ACCESS_TOKEN: 'EAA_fixture' });
+  const stripe = new Stripe('sk_test_fixture');
+  const session = {
+    id: 'cs_live_pattee', livemode: true, status: 'complete', payment_status: 'paid',
+    amount_total: 4780, currency: 'eur', customer_details: { email: ' Buyer@Example.Test ' },
+    metadata: { order_number: 'PT-20261021-ABCDEFGH', meta_marketing_consent: 'granted', meta_event_id: 'patteo_PT-20261021-ABCDEFGH', meta_fbp: 'fb.1.123.abc', meta_fbc: 'fb.1.123.click' },
+  };
+  const items = [{ description: 'Tapis Patteo XS — Gris galet', quantity: 2, amount_subtotal: 4780, amount_total: 4780 }];
+  stripe.checkout.sessions.retrieve = async () => session;
+  stripe.checkout.sessions.listLineItems = async () => ({ data: items });
+  stripe.checkout.sessions.update = async (_id, values) => { session.metadata = values.metadata; return session; };
+  let metaCalls = 0;
+  let emailCalls = 0;
+  const payload = eventPayload('checkout.session.completed', true);
+  const signature = Stripe.webhooks.generateTestHeaderString({ payload, secret: process.env.STRIPE_WEBHOOK_SECRET_LIVE });
+  const invoke = async () => {
+    const res = responseRecorder();
+    await webhook({ method: 'POST', headers: { 'stripe-signature': signature }, body: Buffer.from(payload) }, res, {
+      getConfig: () => ({ mode: 'live', stripe }),
+      sendMetaPurchase: async args => {
+        metaCalls++;
+        assert.equal(args.session.metadata.meta_event_id, 'patteo_PT-20261021-ABCDEFGH');
+        assert.equal(args.accessToken, 'EAA_fixture');
+        return { eventsReceived: 1 };
+      },
+      sendEmail: async () => { emailCalls++; return new Response(JSON.stringify({ id: 'email_fixture' }), { status: 200 }); },
+    });
+    return res;
+  };
+  try {
+    const first = await invoke();
+    assert.equal(first.statusCode, 200);
+    assert.equal(first.body.metaSent, true);
+    assert.ok(session.metadata.meta_capi_sent_at);
+    const duplicate = await invoke();
+    assert.equal(duplicate.body.duplicate, true);
+    assert.equal(metaCalls, 1);
+    assert.equal(emailCalls, 1);
+  } finally {
+    for (const key of keys) previous[key] === undefined ? delete process.env[key] : process.env[key] = previous[key];
+  }
+});
+
+test('Meta CAPI Purchase hashes email and includes shared Pixel/CAPI event ID', async () => {
+  let request;
+  const result = await sendMetaPurchase({
+    session: {
+      id: 'cs_live_order', amount_total: 2840, currency: 'eur', customer_details: { email: 'Buyer@Example.Test' },
+      metadata: { order_number: 'PT-20261021-ABCDEFGH', meta_marketing_consent: 'granted', meta_event_id: 'purchase-shared-id', meta_fbp: 'fbp-fixture', meta_fbc: 'fbc-fixture' },
+    },
+    items: [{ description: 'Tapis Patteo L — Bleu balade', quantity: 1, amount_subtotal: 2840 }],
+    accessToken: 'EAA_fixture',
+    fetchImpl: async (url, options) => {
+      request = { url, payload: JSON.parse(options.body) };
+      return new Response(JSON.stringify({ events_received: 1 }), { status: 200 });
+    },
+  });
+  assert.equal(result.eventsReceived, 1);
+  const event = request.payload.data[0];
+  assert.equal(event.event_name, 'Purchase');
+  assert.equal(event.event_id, 'purchase-shared-id');
+  assert.equal(event.user_data.em[0], 'f979a1713bf697bbbf1fc65fa352d2bb2376ee4ddf41d3bb07f9fb8f6126d1db');
+  assert.equal(event.user_data.fbp, 'fbp-fixture');
+  assert.equal(event.user_data.fbc, 'fbc-fixture');
+  assert.equal(event.custom_data.value, 28.4);
+  assert.match(request.url, /2161618601394842\/events\?/);
+});
+
+test('Meta CAPI never transmits a purchase without an explicit saved marketing consent', async () => {
+  let sent = false;
+  const result = await sendMetaPurchase({
+    session: { id: 'cs_live_no_consent', metadata: { order_number: 'PT-20261021-NOCONSENT', meta_marketing_consent: 'denied', meta_event_id: 'purchase-denied' } },
+    items: [],
+    accessToken: 'EAA_fixture',
+    fetchImpl: async () => { sent = true; return new Response('{}'); },
+  });
+  assert.deepEqual(result, { skipped: true });
+  assert.equal(sent, false);
 });
 
 test('confirmation email escapes item names and includes order and totals', () => {

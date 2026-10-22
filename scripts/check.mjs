@@ -25,6 +25,8 @@ assert.match(code,/patteo-marketing-consent-v1/);
 assert.match(code,/data-cookie-choice="reject"/);
 assert.match(code,/if\(!marketingAllowed\(\)\|\|window\.__patteoMetaInitialized\)return/);
 assert.match(code,/trackMeta\('Purchase'/);
+assert.match(code,/data\.metaEventId/);
+assert.match(code,/API Conversions/);
 assert.match(code,/trackMeta\('AddToCart'/);
 assert.match(code,/trackMeta\('InitiateCheckout'/);
 assert.match(code,/trackMeta\('ViewContent'/);

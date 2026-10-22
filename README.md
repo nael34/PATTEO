@@ -17,7 +17,8 @@ Pas de dépendance à installer. Node 20+ suffit. Le serveur local utilise le po
 - Site public et indexable ; `robots.txt`, sitemap et URL canoniques configurés. La page de commande reste exclue de l’index.
 - Stripe est en mode live uniquement en production ; les environnements preview et development restent en mode test. Les clés sont des variables Vercel, jamais enregistrées dans le dépôt.
 - Le webhook Stripe live est configuré pour `checkout.session.completed` et `checkout.session.async_payment_succeeded`. L’e-mail de confirmation Resend ne part qu’après relecture et validation du paiement payé dans Stripe.
-- Le pré-rendu expose un événement `purchase` sans données personnelles et dédupliqué par numéro de commande. Aucun tag Google Ads n’est actif : l’identifiant de conversion et le consentement/confidentialité restent à finaliser.
+- Le Pixel Meta est chargé uniquement après consentement. Le webhook Stripe peut transmettre l’événement `Purchase` à la Conversions API après confirmation d’un paiement live, uniquement si le consentement a été donné au démarrage du paiement. L’événement navigateur et l’événement serveur partagent le même `event_id` pour la déduplication ; l’e-mail est haché avant envoi à Meta.
+- Pour activer l’envoi serveur, ajouter `META_CAPI_ACCESS_TOKEN` comme variable secrète Vercel en production. Aucun jeton Meta n’est stocké dans Git ni exposé au navigateur. Le test local vérifie le format et le consentement, sans envoyer de données à Meta.
 - Le gros plan IA `dist/assets/texture-macro.jpg` illustre la chenille grise dans la galerie et dans la section « Tout est dans la texture ». Il ne constitue pas une photographie de microscopie ni une vérification de la composition textile.
 - Aucune clé, aucun compte Stripe ni projet Vercel de PinkPrint n’a été utilisé.
 - Pas de faux avis, compteurs de clients, disponibilité inventée ou promotion fictive.
@@ -30,7 +31,7 @@ Pas de dépendance à installer. Node 20+ suffit. Le serveur local utilise le po
 2. Conditions de livraison, de retour, adresse SAV, identité juridique, mentions légales, CGV et confidentialité. Les dialogues actuels disent explicitement que ces informations ne sont pas encore complètes.
 3. Domaine de marque, disponibilité du nom et hébergement commercial choisis.
 4. Effectuer un achat réel contrôlé avec un client, puis confirmer la réception du mail de commande. Ne jamais considérer une simple page de retour comme une preuve de paiement.
-5. Fournir l’identifiant/label de conversion Google Ads, finaliser le consentement et activer le tag uniquement après validation de la politique de confidentialité.
+5. Vérifier la réception des événements Pixel et CAPI dans Meta Events Manager après un achat live avec consentement ; le CAPI reste inactif tant que le jeton secret n’est pas renseigné.
 6. Finaliser les mentions légales, CGV, retours, médiateur et informations d’entreprise avec le client. Remplacer les visuels IA par les photos réelles dès réception.
 7. Vérifier les offres, variantes, prix, disponibilité et livraison dans Merchant Center avant toute campagne Shopping/PMax.
 
