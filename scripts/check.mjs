@@ -20,6 +20,14 @@ for(const file of files){
 for(const asset of ['hero.webp','gris.webp','bleu.webp','jaune.webp','logo.png'])assert.ok((await stat(path.join(root,'assets',asset))).size>1000);
 const code=await readFile(path.join(root,'app.js'),'utf8');
 assert.match(code,/checkoutEnabled: true/);
+assert.match(code,/const META_PIXEL_ID = '2161618601394842'/);
+assert.match(code,/patteo-marketing-consent-v1/);
+assert.match(code,/data-cookie-choice="reject"/);
+assert.match(code,/if\(!marketingAllowed\(\)\|\|window\.__patteoMetaInitialized\)return/);
+assert.match(code,/trackMeta\('Purchase'/);
+assert.match(code,/trackMeta\('AddToCart'/);
+assert.match(code,/trackMeta\('InitiateCheckout'/);
+assert.match(code,/trackMeta\('ViewContent'/);
 assert.ok(!/sk_live_[A-Za-z0-9]{16,}/.test(code));
 assert.match(await readFile(path.join(root,'robots.txt'),'utf8'),/Allow: \/[\s\S]*Sitemap:/);
 assert.match(await readFile(path.join(root,'sitemap.xml'),'utf8'),/https:\/\/patteo\.vercel\.app\/produit\//);
