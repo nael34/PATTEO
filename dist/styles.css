@@ -94,3 +94,19 @@ body[data-page="product"] .product-info .price-line span{display:inline-flex;ali
 @keyframes patteo-photo-scroll{to{transform:translateY(-50%)}}
 @media(max-width:760px){.photo-review-section{padding:60px 0 65px}.photo-review-heading{margin-bottom:24px}.photo-review-heading h2{font-size:36px}.photo-review-wall{height:520px;min-height:430px;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.photo-review-column-last{display:none}.photo-review-track{gap:12px;animation-duration:26s}.photo-review-column-slower .photo-review-track{animation-duration:31s}.photo-review-card span{padding:8px 10px 2px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){.photo-review-track{animation:none}.photo-review-wall{height:auto;min-height:0;mask-image:none}.photo-review-column{max-height:620px}}
+.review-jump{display:inline-flex;align-items:center;gap:10px;margin-top:20px;color:var(--ink);font-size:12px;text-decoration:underline;text-underline-offset:4px}
+.photo-review-section{scroll-margin-top:90px}
+.review-jump span{font-size:17px}
+.review-submit{max-width:680px;margin:54px auto 0;padding:34px 38px;background:#fffefa;border:1px solid #dedfd6;border-radius:16px;box-shadow:0 8px 28px #173e5009}
+.review-submit h3{margin:0 0 9px;font-family:var(--serif);font-size:27px;font-weight:400;color:var(--ink)}
+.review-submit>p{margin:0 0 23px;color:var(--body);font-size:12px;line-height:1.7}
+.review-submit>label{display:grid;gap:8px;margin:16px 0;color:var(--ink);font-size:11px;font-weight:600}
+.review-submit label span{color:#71807b;font-weight:400}
+.review-submit input[type=text],.review-submit textarea{width:100%;padding:12px 13px;border:1px solid #cbd1ca;border-radius:7px;background:#fffefa;color:var(--ink);font:inherit;font-size:13px;resize:vertical}
+.review-submit input[type=file]{font:inherit;font-size:11px;color:var(--body)}
+.review-submit .review-consent{display:flex;align-items:flex-start;gap:10px;margin:18px 0;color:var(--body);font-size:10px;font-weight:400;line-height:1.65}
+.review-consent input{flex:0 0 auto;margin:3px 0 0;accent-color:var(--ink)}
+.review-honey{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+.review-submit button:disabled{opacity:.6;cursor:wait}
+.review-submit-status{min-height:1.5em;margin:12px 0 0!important;color:var(--ink)!important;font-size:11px!important}
+@media(max-width:760px){.review-jump{font-size:11px}.review-submit{margin-top:35px;padding:25px 20px;border-radius:13px}.review-submit h3{font-size:23px}.review-submit>p{font-size:11px}}

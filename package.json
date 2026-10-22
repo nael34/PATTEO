@@ -6,7 +6,7 @@
   "description": "Boutique Patteo autonome — aperçu avant connexion du paiement",
   "scripts": {
     "dev": "node server.mjs",
-    "check": "node --check dist/app.js && node --check server.mjs && node --check api/create-checkout-session.js && node --check api/session-status.js && node --check api/stripe-webhook.js && node scripts/check.mjs && node --test tests/*.test.js",
+    "check": "node --check dist/app.js && node --check server.mjs && node --check api/create-checkout-session.js && node --check api/session-status.js && node --check api/stripe-webhook.js && node --check api/photo-submission.js && node scripts/check.mjs && node --test tests/*.test.js",
     "test": "node --test tests/*.test.js"
   },
   "dependencies": { "stripe": "22.6.0" },
