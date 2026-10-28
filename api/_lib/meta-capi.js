@@ -16,6 +16,8 @@ export async function sendMetaPurchase({ session, items, accessToken, fetchImpl 
   if (email) userData.em = [sha256(email)];
   if (metadata.meta_fbp) userData.fbp = metadata.meta_fbp;
   if (metadata.meta_fbc) userData.fbc = metadata.meta_fbc;
+  if (metadata.meta_client_ip_address) userData.client_ip_address = metadata.meta_client_ip_address;
+  if (metadata.meta_client_user_agent) userData.client_user_agent = metadata.meta_client_user_agent;
 
   const contents = items.map(item => ({
     id: String(item.description || 'Article Patteo').slice(0, 160),
