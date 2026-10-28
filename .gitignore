@@ -4,3 +4,9 @@ node_modules/
 !.env.example
 *.tar.gz
 qa/
+*.zip
+*.icloud
+# Caches et fichiers temporaires du montage, pas les sources ni les médias.
+videos/**/.hyperframes/
+videos/**/.thumbnails/
+videos/**/renders/.*.hf-transaction-*/

@@ -1,0 +1,122 @@
+PATTEO — CONTEXTE DE REPRISE
+Date : 28 octobre 2026. Sources : fichiers locaux, historique Git et dernier
+échange du chat « Mettre à jour les images et tailles ».
+Les états cloud ci-dessous proviennent de la documentation du projet et des
+travaux antérieurs ; les comptes live n'ont pas été réaudités pour la migration.
+
+LE PROJET
+Boutique française de tapis chenille pour les pattes des chiens.
+Projet autonome, à garder séparé de PinkPrint/Pikprint et de leurs comptes.
+Site documenté : https://patteo.vercel.app
+Dépôt : https://github.com/nael34/PATTEO
+Branche au moment de la sauvegarde : main.
+Commit HEAD : dea7d7bb0618574aefc6d86c93e6249fbb18c4a1.
+Dernier sujet de commit : Add consent-gated Meta Conversions API Purchase.
+
+STRUCTURE
+dist/app.js : textes, variantes, prix, rendu des pages et interactions.
+dist/styles.css : styles ; dist/assets/ : images, logo, badges de paiement.
+dist/ : cinq pages HTML pré-rendues, robots.txt et sitemap.xml.
+scripts/render.mjs : pré-rendu ; server.mjs : serveur statique port 4187.
+api/ : création de paiement Stripe, statut de session, webhook et photos.
+tests/ : tests Stripe, consentement Meta et contributions photo.
+videos/patteo-promo/ : projet HyperFrames et médias de la publicité.
+
+AVANCEMENT DU SITE
+Accueil, fiche produit, variantes, panier persistant, commande, aide/FAQ,
+livraison, photos agrandissables et informations de paiement présents.
+Trois couleurs : gris galet, bleu balade, jaune soleil.
+Prix TTC affichés, livraison comprise :
+  XS : 30 x 50 cm — 23,90 EUR
+  S  : 40 x 60 cm — 25,40 EUR
+  M  : 45 x 70 cm — 26,90 EUR
+  L  : 50 x 80 cm — 28,40 EUR
+  XL : 60 x 90 cm — 29,90 EUR
+Écart demandé : 1,50 EUR par taille, à partir du XL à 29,90 EUR.
+Les prix sont définis aussi côté serveur dans api/_lib/stripe-test.js.
+Demande utilisateur : des photos de produit sans dimensions écrites dessus,
+et des zooms texture pour les autres couleurs. Les fichiers de textures bleu
+et jaune existent dans Git ; ils sont restaurés dans la copie de migration
+et dans le dossier de travail avant le push GitHub.
+La livraison affichée annonce préparation 1 à 3 jours, puis acheminement
+8 à 18 jours après expédition ; confirmer ces délais avec le fournisseur.
+
+PAIEMENT, MAILS ET MESURE
+Documentation : production Stripe live ; preview/development en test.
+Clés distinctes par mode, validation du panier et prix côté serveur.
+Le retour de paiement relit la session ; le webhook vérifie la signature et
+ne confirme une commande par Resend qu'après vérification du paiement payé.
+Badges de paiement présents ; leur présence ne prouve pas que chaque moyen
+est activé dans la configuration Stripe du compte.
+Contributions clients/photos soumises à modération ; pas de faux avis.
+Pixel Meta ID 2161618601394842, chargé après consentement marketing.
+CAPI Purchase préparée avec consentement, email haché et event_id partagé
+avec le Pixel pour la déduplication. META_CAPI_ACCESS_TOKEN nécessaire en prod.
+Un événement purchase est préparé dans dataLayer ; les identifiants Google
+Ads et leur vérification sont à reprendre selon la configuration effective.
+
+PUBLICITE VIDEO — CE QUI A ETE FAIT
+Dernier échange : publicité terminée et export vérifié le 22 octobre 2026.
+Nom attendu : videos/patteo-promo/renders/patteo-30s.mp4.
+Export annoncé : 30 secondes, 1080 x 1920, 30 i/s, H.264, audio AAC.
+Concept : « Le rituel du retour », après la balade, entrée, texture, choix
+des trois couleurs, « Du XS au XL », « dès 23,90 EUR », livraison comprise,
+logo et CTA « Choisis ton coloris ».
+Voix française Gemini Kore, quatre WAV inclus. Effets discrets inclus.
+Pas de musique de fond sur cette version. Aucune campagne lancée par ce travail.
+Brief, script, storyboard, spécification, HTML éditable et métadonnées inclus.
+CLI fixé dans le package vidéo : HyperFrames 0.8.186.
+GSAP 3.14.2 est référencé par URL CDN dans le HTML du montage.
+Le MP4 est exclu de la migration GitHub, comme convenu avec l'utilisateur :
+sur l'ancien Mac, il est représenté par un fichier .icloud de 164 octets.
+Ce fichier est un pointeur et ne contient pas les 31 240 720 octets de vidéo.
+
+PROBLEMES TECHNIQUES RENCONTRES PRECEDEMMENT
+Ancien Mac presque plein pendant la fabrication vidéo : nombreux arrêts
+de rendu par manque d'espace. Prévoir plusieurs Go libres sur le nouveau PC.
+FFmpeg et ffprobe ont été utilisés depuis un dossier temporaire puis retirés ;
+ils ne sont pas installés globalement et ne sont pas inclus comme exécutables.
+Chrome headless a aussi rencontré un arrêt du bac d'exécution ; le rendu
+précédent a finalement fonctionné avec Google Chrome installé sur le Mac.
+Derniers contrôles HyperFrames rapportés : pas d'erreur de layout/contraste,
+8 avertissements de structure des scènes pour l'édition, export néanmoins fini.
+Les skills vidéo sont copiés comme ressources ; les sessions, comptes,
+navigateurs, caches de rendu et exécutables restent à installer/reconnecter.
+Le check du site d'origine réussit malgré les textures absentes : il ne couvre
+pas toutes les références construites dynamiquement. La copie inclut les PNG
+récupérés depuis Git et un contrôle supplémentaire des médias est prévu.
+
+POINTS OUVERTS AVANT PUBLICITE / EXPLOITATION
+- Compléter et valider identité légale, mentions, CGV, confidentialité, retours,
+  médiateur, adresse SAV et fiscalité avec les informations réelles.
+- Confirmer coûts et conditions fournisseur, SKU, stock, tailles, composition,
+  entretien, marge et délais pour les quinze combinaisons taille/couleur.
+- Les mises en scène et certains zooms sont générés par IA : les rapprocher
+  du produit réel, puis remplacer par les photos authentiques disponibles.
+- Confirmer le domaine de marque et la configuration commerciale retenue.
+- Effectuer un achat réel contrôlé et vérifier Stripe, le webhook et le mail.
+- Contrôler Pixel/CAPI dans Meta Events Manager avec consentement.
+- Vérifier les offres, variantes, disponibilité et livraison Merchant Center
+  avant une éventuelle campagne Shopping/PMax.
+- README.md contient encore « pas de dépendance à installer » et un ancien
+  prix de départ de 29,90 EUR : package.json et les prix actuels ci-dessus
+  constituent la référence technique. VERIFICATION.md mélange plusieurs
+  étapes historiques : ses dernières limites ne décrivent pas toutes l'état
+  du code après ajout de Stripe live. Ne pas les interpréter comme un audit récent.
+
+IDEES ET PREFERENCES A CONSERVER
+L'utilisateur veut que l'assistant pilote directement génération de voix,
+montage et synchronisation son/image, sans lui renvoyer la fabrication audio.
+Voix commerciale française naturelle, pas de promesses inventées.
+Pas de faux témoignages, urgence fictive ou réduction fictive.
+Pas de dimensions imprimées dans les photos ; tailles dans l'interface.
+Prix lisible, livraison près du bouton, choix de couleur simple sur mobile.
+Poursuivre éventuellement des variantes publicitaires à partir du montage
+existant une fois le produit, les pages et la mesure validés. Ce sont des
+pistes, pas des tâches déjà exécutées ni des garanties de conversion.
+
+SUGGESTION DE PREMIER MESSAGE SUR LE NOUVEAU PC
+« Reprends PATTEO dans ce dossier. Lis les deux fichiers TXT de migration
+à la racine du dépôt, puis README.md et package.json. Vérifie le site,
+les quinze variantes et le projet vidéo avant toute modification. Préserve
+les travaux existants et les accès séparés de mes autres boutiques. »

@@ -1,0 +1,58 @@
+ENVIRONNEMENT ET ACCES — 28 OCTOBRE 2026
+
+SITE
+Node utilisé : v24.14.0 ; npm : 11.9.0 ; engines du projet : >=20.
+JavaScript ESM, serveur HTTP Node natif, aucun framework de compilation.
+Dépendance runtime unique : stripe 22.6.0, package-lock.json fourni.
+Dans la sauvegarde ZIP, node_modules est fourni ; dans GitHub, il est exclu.
+Après un clone GitHub, exécuter npm ci pour installer Stripe 22.6.0.
+Réinstallation reproductible : npm ci. Vérification : npm run check.
+Pré-rendu après modifications : node scripts/render.mjs puis npm run check.
+Serveur statique : npm run dev ; URL http://localhost:4187.
+Le serveur ne charge pas .env.local et ne sert pas les routes /api.
+
+SERVICES A RECONNECTER SI NECESSAIRE
+GitHub : utiliser l'accès au dépôt existant nael34/PATTEO.
+Vercel : se connecter au compte contenant le projet Patteo existant.
+Stripe, Resend, Meta : garder les comptes Patteo existants.
+Gemini : nécessaire seulement pour générer une nouvelle narration.
+Aucun mot de passe, cookie, jeton de connexion de navigateur ou auth Codex
+n'est exporté. Aucun nouvel abonnement ou service n'a été créé.
+
+VARIABLES UTILISEES PAR LE CODE
+STRIPE_MODE : test ou live ; utiliser test pour le travail local/preview.
+STRIPE_SECRET_KEY / STRIPE_PUBLISHABLE_KEY : clés de test.
+STRIPE_WEBHOOK_SECRET : signature du webhook de test.
+STRIPE_RESTRICTED_KEY_LIVE / STRIPE_PUBLISHABLE_KEY_LIVE : production.
+STRIPE_WEBHOOK_SECRET_LIVE : signature du webhook de production.
+RESEND_API_KEY : envoi des confirmations et contributions client.
+RESEND_FROM_EMAIL : expéditeur ; valeur de repli actuellement dans le code.
+META_CAPI_ACCESS_TOKEN : secret serveur Meta pour Purchase live avec accord.
+GEMINI_API_KEY : présente uniquement dans .env.local sur cet ancien Mac,
+exclue de GitHub et de l'archive. Ne pas confondre avec une clé Stripe.
+PORT : option du serveur statique ; 4187 par défaut.
+
+À la racine du dépôt, copier .env.example en .env.local puis renseigner les valeurs
+nécessaires via un canal privé ou le gestionnaire de variables du service.
+Ne pas publier les secrets dans Git ni dans un chat.
+Le fichier exemple conserve volontairement les clés live vides.
+
+TESTER LES API
+Les fichiers api/ sont des fonctions pour Vercel. Utiliser le projet Vercel
+existant, ses environnements séparés et les variables correspondant au mode.
+Un simple serveur statique n'exécute ni paiement ni webhook.
+Cette migration ne modifie ni déploiement, ni clés, ni configuration live.
+
+VIDEO
+Dans videos/patteo-promo/ :
+  npm run dev     (prévisualisation HyperFrames)
+  npm run check   (contrôle du montage)
+  npm run render  (nouvel export ; lire aussi les aides du CLI)
+Ces commandes utilisent npx --yes hyperframes@0.8.186 et peuvent télécharger
+le CLI. Le rendu nécessite FFmpeg, ffprobe et un navigateur compatibles avec
+le nouvel OS ; aucun exécutable propre à l'ancien Mac n'est transporté.
+Les WAV/MP3 sont déjà fournis. La génération d'une voix n'est pas requise
+pour reprendre le montage. Le HTML référence GSAP 3.14.2 sur jsDelivr :
+Internet est nécessaire pour cette ressource telle que configurée.
+Les quatre skills vidéo présents sur l'ancien ordinateur sont sauvegardés
+dans OUTILS_VIDEO/skills/ ; lire OUTILS_VIDEO/LIRE.txt pour les réinstaller.

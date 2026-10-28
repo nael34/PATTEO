@@ -1,0 +1,9 @@
+Copie des ressources locales hyperframes, hyperframes-cli,
+hyperframes-registry et media-use présentes sur l'ancien Mac.
+Ces dossiers sont des instructions et scripts, pas les exécutables du moteur.
+Ils ne contiennent ni compte HeyGen, ni clé Gemini, ni navigateur installé.
+Pour retrouver ces instructions sur le nouvel ordinateur, copier leurs
+dossiers dans le répertoire personnel .agents/skills/, ou les conserver
+ici et indiquer leur emplacement à l'assistant.
+Ce sont les versions locales sauvegardées le 28 octobre 2026. Les chemins
+absolus et outils cités peuvent nécessiter une adaptation au nouvel OS.

@@ -1,0 +1,49 @@
+{
+  "tts_provider": "gemini",
+  "voice_id": "Kore",
+  "bgm": null,
+  "bgm_pending": false,
+  "bgm_provider": null,
+  "bgm_pid": null,
+  "bgm_log": null,
+  "bgm_mode": null,
+  "bgm_target_duration_s": null,
+  "bgm_seed_duration_s": null,
+  "bgm_loop_count": null,
+  "voices": [
+    { "id": "opening", "path": "assets/voice/opening.wav", "duration_s": 3.38, "words": [] },
+    { "id": "texture", "path": "assets/voice/texture.wav", "duration_s": 4.38, "words": [] },
+    { "id": "colours", "path": "assets/voice/colours.wav", "duration_s": 3.56, "words": [] },
+    { "id": "offer", "path": "assets/voice/offer.wav", "duration_s": 5.18, "words": [] }
+  ],
+  "sfx": [
+    {
+      "id": "scene-texture",
+      "name": "whoosh-short",
+      "file": "assets/sfx/whoosh-short.mp3",
+      "source": "local",
+      "duration_s": 0.57,
+      "offset_s": 0,
+      "volume": 0.3
+    },
+    {
+      "id": "scene-colours",
+      "name": "whoosh",
+      "file": "assets/sfx/whoosh.mp3",
+      "source": "local",
+      "duration_s": 0.57,
+      "offset_s": 0,
+      "volume": 0.3
+    },
+    {
+      "id": "scene-offer",
+      "name": "pop",
+      "file": "assets/sfx/pop.mp3",
+      "source": "local",
+      "duration_s": 0.72,
+      "offset_s": 0,
+      "volume": 0.3
+    }
+  ],
+  "total_duration_s": 16.5
+}

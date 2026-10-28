@@ -1,5 +1,7 @@
 # Patteo
 
+Pour reprendre sur un autre ordinateur depuis GitHub, commencer par [MIGRATION_README.md](MIGRATION_README.md) et [le résumé d'avancement](AVANCEMENT_PROBLEMES_IDEES.txt).
+
 Boutique française autonome, séparée de PinkPrint. Accueil, fiche produit, trois couleurs, panier persistant, récapitulatif, FAQ et informations de livraison. Logo et quatre images créés avec l’outil de génération d’images intégré ; prompts dans `IMAGE-PROMPTS.md`, fichiers optimisés dans `dist/assets/`.
 
 ## Développement
@@ -10,7 +12,7 @@ node scripts/render.mjs
 npm run check
 ```
 
-Pas de dépendance à installer. Node 20+ suffit. Le serveur local utilise le port 4187. `dist` est un site statique portable, également déployable sur Vercel. `app.js` contient les textes, le prix de départ proposé (29,90 €), les variantes et les interactions ; le script de pré-rendu inscrit le contenu dans le HTML pour un premier affichage immédiat.
+Installer les dépendances avec `npm ci` (Stripe 22.6.0). Node 20+ suffit ; version utilisée : 24.14.0. Le serveur local utilise le port 4187 et sert les pages statiques, sans exécuter les routes `/api`. `dist` est un site statique portable, également déployable sur Vercel. `app.js` contient les textes, les variantes et les interactions ; le prix va de 23,90 € en XS à 29,90 € en XL. Le script de pré-rendu inscrit le contenu dans le HTML pour un premier affichage immédiat.
 
 ## État réel
 

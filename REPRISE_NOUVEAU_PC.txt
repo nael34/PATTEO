@@ -1,0 +1,29 @@
+PATTEO — REPRENDRE DEPUIS GITHUB
+
+Dépôt : https://github.com/nael34/PATTEO
+Branche : main
+
+Message prêt à envoyer à l'assistant sur le nouvel ordinateur :
+
+« Récupère le dépôt https://github.com/nael34/PATTEO sur ce PC.
+Lis MIGRATION_README.md, AVANCEMENT_PROBLEMES_IDEES.txt et
+ENVIRONNEMENT_ET_ACCES.txt à la racine pour retrouver l'avancement,
+les problèmes, les idées et mes préférences. Installe les dépendances
+avec npm ci, vérifie le projet avec npm run check et lance le site.
+Les sources vidéo, les voix et les sons sont inclus ; le MP4 final
+est exclu comme convenu. Les clés sont à rétablir dans les comptes
+existants si nécessaire. Garde PATTEO séparé de mes autres boutiques. »
+
+Commandes manuelles (Git et Node.js installés) :
+  git clone https://github.com/nael34/PATTEO.git
+  cd PATTEO
+  npm ci
+  npm run check
+  npm run dev
+
+Puis ouvrir http://localhost:4187.
+Version Node de référence : 24.14.0 (.nvmrc), minimum déclaré : 20.
+Sous PowerShell, utiliser npm.cmd si npm.ps1 est bloqué.
+
+Pour récupérer ensuite les nouveaux commits, après avoir enregistré
+ses propres modifications : git pull --ff-only.

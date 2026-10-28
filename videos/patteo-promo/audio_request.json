@@ -1,0 +1,29 @@
+{
+  "provider": "gemini",
+  "tts_model": "gemini-3.8-flash-tts",
+  "voice": "Kore",
+  "lang": "fr",
+  "style": "French commercial narration, warm, intimate and reassuring, like a polished home-and-lifestyle advert. Deliberate unhurried diction, about 125 words per minute, with clear phrase endings and a brief natural pause between sentences. Do not rush or sound like a radio spot; lightly smiling, not overexcited. Pronounce PATTEO as 'pa-té-o' and prices naturally in French.",
+  "lines": [
+    {
+      "id": "opening",
+      "text": "Après la balade, la maison retrouve son calme. Place au petit rituel du retour."
+    },
+    {
+      "id": "texture",
+      "text": "Devant la porte, PATTEO accueille les pattes sur une chenille douce. Elle aide à retenir l’humidité et les saletés au contact.",
+      "sfx": ["whoosh-short"]
+    },
+    {
+      "id": "colours",
+      "text": "Gris galet, bleu balade ou jaune soleil : choisis le coloris qui va chez toi.",
+      "sfx": ["whoosh"]
+    },
+    {
+      "id": "offer",
+      "text": "Cinq formats, du XS au XL, à partir de vingt-trois euros quatre-vingt-dix, livraison comprise. Découvre PATTEO en ligne.",
+      "sfx": ["pop"]
+    }
+  ],
+  "bgm": { "mode": "none" }
+}
