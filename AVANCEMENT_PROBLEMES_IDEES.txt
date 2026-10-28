@@ -49,7 +49,7 @@ ne confirme une commande par Resend qu'après vérification du paiement payé.
 Badges de paiement présents ; leur présence ne prouve pas que chaque moyen
 est activé dans la configuration Stripe du compte.
 Contributions clients/photos soumises à modération ; pas de faux avis.
-Pixel Meta ID 2161618601394842, chargé après consentement marketing.
+Pixel Meta ID 2182463895952425, chargé après consentement marketing.
 CAPI Purchase préparée avec consentement, email haché et event_id partagé
 avec le Pixel pour la déduplication. META_CAPI_ACCESS_TOKEN nécessaire en prod.
 Un événement purchase est préparé dans dataLayer ; les identifiants Google
