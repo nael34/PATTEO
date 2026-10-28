@@ -11,11 +11,16 @@ export default async function handler(req, res, dependencies = {}) {
   const orderNumber = makeOrderNumber();
   const marketingConsent = req.body?.marketingConsent === true;
   const metaEventId = `patteo_${orderNumber}`;
+  const forwardedFor = req.headers?.['x-forwarded-for'];
+  const clientIp = (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor || req.headers?.['x-real-ip'] || '').split(',')[0].trim();
+  const clientUserAgent = Array.isArray(req.headers?.['user-agent']) ? req.headers['user-agent'][0] : req.headers?.['user-agent'];
   const marketingMetadata = marketingConsent ? {
     meta_marketing_consent: 'granted',
     meta_event_id: metaEventId,
     meta_fbp: typeof req.body?.metaFbp === 'string' ? req.body.metaFbp.slice(0, 200) : '',
     meta_fbc: typeof req.body?.metaFbc === 'string' ? req.body.metaFbc.slice(0, 200) : '',
+    meta_client_ip_address: clientIp.slice(0, 100),
+    meta_client_user_agent: typeof clientUserAgent === 'string' ? clientUserAgent.slice(0, 500) : '',
   } : {};
   try {
     const session = await config.stripe.checkout.sessions.create({
