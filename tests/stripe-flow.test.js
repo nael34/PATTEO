@@ -66,6 +66,24 @@ test('checkout creates a test-only session with server prices and order metadata
   assert.equal(created.shipping_address_collection.allowed_countries.includes('FR'), true);
 });
 
+test('checkout saves Meta matching data only after marketing consent', async () => {
+  let created;
+  const res = responseRecorder();
+  await createCheckout({
+    method: 'POST',
+    headers: { 'x-forwarded-for': '203.0.113.42, 10.0.0.1', 'user-agent': 'Patteo-Test-Browser/1.0' },
+    body: { cart: [{ color: 'gris', size: 'xs', qty: 1 }], marketingConsent: true, metaFbp: 'fbp-fixture', metaFbc: 'fbc-fixture' },
+  }, res, {
+    getConfig: () => ({ mode: 'test', publishableKey: 'pk_test_fixture', stripe: { checkout: { sessions: { create: async value => { created = value; return { id: 'cs_test_pattee', livemode: false, client_secret: 'cs_test_secret' }; } } } } }),
+  });
+  assert.equal(res.statusCode, 200);
+  assert.equal(created.metadata.meta_marketing_consent, 'granted');
+  assert.equal(created.metadata.meta_client_ip_address, '203.0.113.42');
+  assert.equal(created.metadata.meta_client_user_agent, 'Patteo-Test-Browser/1.0');
+  assert.equal(created.metadata.meta_fbp, 'fbp-fixture');
+  assert.equal(created.metadata.meta_fbc, 'fbc-fixture');
+});
+
 test('checkout rejects invalid cart before calling Stripe', async () => {
   let called = false;
   const res = responseRecorder();
@@ -291,7 +309,7 @@ test('Meta CAPI Purchase hashes email and includes shared Pixel/CAPI event ID', 
   const result = await sendMetaPurchase({
     session: {
       id: 'cs_live_order', amount_total: 2840, currency: 'eur', customer_details: { email: 'Buyer@Example.Test' },
-      metadata: { order_number: 'PT-20261021-ABCDEFGH', meta_marketing_consent: 'granted', meta_event_id: 'purchase-shared-id', meta_fbp: 'fbp-fixture', meta_fbc: 'fbc-fixture' },
+      metadata: { order_number: 'PT-20261021-ABCDEFGH', meta_marketing_consent: 'granted', meta_event_id: 'purchase-shared-id', meta_fbp: 'fbp-fixture', meta_fbc: 'fbc-fixture', meta_client_ip_address: '203.0.113.42', meta_client_user_agent: 'Patteo-Test-Browser/1.0' },
     },
     items: [{ description: 'Tapis Patteo L — Bleu balade', quantity: 1, amount_subtotal: 2840 }],
     accessToken: 'EAA_fixture',
@@ -307,6 +325,8 @@ test('Meta CAPI Purchase hashes email and includes shared Pixel/CAPI event ID', 
   assert.equal(event.user_data.em[0], 'f979a1713bf697bbbf1fc65fa352d2bb2376ee4ddf41d3bb07f9fb8f6126d1db');
   assert.equal(event.user_data.fbp, 'fbp-fixture');
   assert.equal(event.user_data.fbc, 'fbc-fixture');
+  assert.equal(event.user_data.client_ip_address, '203.0.113.42');
+  assert.equal(event.user_data.client_user_agent, 'Patteo-Test-Browser/1.0');
   assert.equal(event.custom_data.value, 28.4);
   assert.match(request.url, /2182463895952425\/events\?/);
 });
