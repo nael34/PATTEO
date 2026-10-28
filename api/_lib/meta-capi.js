@@ -5,11 +5,19 @@ export const META_GRAPH_API_VERSION = 'v25.0';
 
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 
-export async function sendMetaPurchase({ session, items, accessToken, fetchImpl = fetch }) {
+export function getMetaTestEventCode(mode, env = process.env) {
+  const code = env.META_TEST_EVENT_CODE;
+  return mode === 'test' && typeof code === 'string' && /^TEST[A-Z0-9_-]{1,80}$/.test(code) ? code : null;
+}
+
+export async function sendMetaPurchase({ session, items, accessToken, testEventCode = null, fetchImpl = fetch }) {
   const metadata = session.metadata || {};
   if (!accessToken || metadata.meta_marketing_consent !== 'granted' || !metadata.meta_event_id) {
     return { skipped: true };
   }
+  // Test payments must never be reported as production purchases.
+  if (session.livemode === false && (!testEventCode || metadata.meta_test_event_code !== testEventCode)) return { skipped: true };
+  if (testEventCode && (session.livemode !== false || !/^TEST[A-Z0-9_-]{1,80}$/.test(testEventCode))) throw new Error('Invalid Meta test purchase configuration');
 
   const email = String(session.customer_details?.email || session.customer_email || '').trim().toLowerCase();
   const userData = {};
@@ -25,6 +33,7 @@ export async function sendMetaPurchase({ session, items, accessToken, fetchImpl 
     item_price: Math.round(Number(item.amount_subtotal || 0) / Math.max(1, Number(item.quantity || 1))) / 100,
   }));
   const payload = {
+    ...(testEventCode ? { test_event_code: testEventCode } : {}),
     data: [{
       event_name: 'Purchase',
       event_time: Math.floor(Date.now() / 1000),
@@ -55,7 +64,7 @@ export async function sendMetaPurchase({ session, items, accessToken, fetchImpl 
     throw new Error('Meta Conversions API rejected Purchase event');
   }
   const result = await response.json();
-  if (Number(result.events_received) < 1) {
+  if (!(Number(result.events_received) >= 1)) {
     console.error('PATTEO: Meta Conversions API did not accept the paid Purchase event.');
     throw new Error('Meta Conversions API did not accept Purchase event');
   }

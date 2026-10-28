@@ -1,4 +1,5 @@
 import { COLORS, DIMENSIONS, PRICES, getStripeConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from './_lib/stripe-test.js';
+import { getMetaTestEventCode } from './_lib/meta-capi.js';
 
 export default async function handler(req, res, dependencies = {}) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
@@ -10,6 +11,7 @@ export default async function handler(req, res, dependencies = {}) {
 
   const orderNumber = makeOrderNumber();
   const marketingConsent = req.body?.marketingConsent === true;
+  const metaTestEventCode = getMetaTestEventCode(config.mode);
   const metaEventId = `patteo_${orderNumber}`;
   const forwardedFor = req.headers?.['x-forwarded-for'];
   const clientIp = (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor || req.headers?.['x-real-ip'] || '').split(',')[0].trim();
@@ -17,6 +19,7 @@ export default async function handler(req, res, dependencies = {}) {
   const marketingMetadata = marketingConsent ? {
     meta_marketing_consent: 'granted',
     meta_event_id: metaEventId,
+    ...(metaTestEventCode ? { meta_test_event_code: metaTestEventCode } : {}),
     meta_fbp: typeof req.body?.metaFbp === 'string' ? req.body.metaFbp.slice(0, 200) : '',
     meta_fbc: typeof req.body?.metaFbc === 'string' ? req.body.metaFbc.slice(0, 200) : '',
     meta_client_ip_address: clientIp.slice(0, 100),

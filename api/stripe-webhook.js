@@ -1,5 +1,5 @@
 import { formatCurrency, getStripeConfig } from './_lib/stripe-test.js';
-import { sendMetaPurchase } from './_lib/meta-capi.js';
+import { getMetaTestEventCode, sendMetaPurchase } from './_lib/meta-capi.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -71,7 +71,10 @@ export default async function handler(req, res, dependencies = {}) {
     if (session.livemode !== (configResult.mode === 'live') || session.status !== 'complete' || session.payment_status !== 'paid') {
       return res.status(200).json({ received: true, ignored: 'payment not paid' });
     }
-    const shouldSendMeta = configResult.mode === 'live' && !!metaAccessToken &&
+    const testEventCode = getMetaTestEventCode(configResult.mode);
+    const metaModeAllowed = configResult.mode === 'live' ||
+      (testEventCode && session.metadata?.meta_test_event_code === testEventCode);
+    const shouldSendMeta = !!metaModeAllowed && !!metaAccessToken &&
       session.metadata?.meta_marketing_consent === 'granted' && !!session.metadata?.meta_event_id && !session.metadata?.meta_capi_sent_at;
     const shouldSendEmail = !session.metadata?.confirmation_email_sent_at && !session.metadata?.confirmation_email_skipped;
     if (!shouldSendMeta && !shouldSendEmail) return res.status(200).json({ received: true, duplicate: true });
@@ -79,7 +82,8 @@ export default async function handler(req, res, dependencies = {}) {
     const { data: items } = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
     if (shouldSendMeta) {
       const sendMeta = dependencies.sendMetaPurchase || sendMetaPurchase;
-      await sendMeta({ session, items, accessToken: metaAccessToken, fetchImpl: dependencies.fetchMeta || fetch });
+      const metaResult = await sendMeta({ session, items, accessToken: metaAccessToken, testEventCode, fetchImpl: dependencies.fetchMeta || fetch });
+      if (metaResult?.skipped) throw new Error('Meta purchase unexpectedly skipped');
       session.metadata = { ...session.metadata, meta_capi_sent_at: new Date().toISOString() };
       await stripe.checkout.sessions.update(session.id, { metadata: session.metadata });
     }
