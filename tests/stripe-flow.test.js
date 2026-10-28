@@ -308,7 +308,7 @@ test('Meta CAPI Purchase hashes email and includes shared Pixel/CAPI event ID', 
   assert.equal(event.user_data.fbp, 'fbp-fixture');
   assert.equal(event.user_data.fbc, 'fbc-fixture');
   assert.equal(event.custom_data.value, 28.4);
-  assert.match(request.url, /2161618601394842\/events\?/);
+  assert.match(request.url, /2182463895952425\/events\?/);
 });
 
 test('Meta CAPI never transmits a purchase without an explicit saved marketing consent', async () => {
