@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const META_PIXEL_ID = '2161618601394842';
+  const META_PIXEL_ID = '2182463895952425';
   const SHOP = {
     price: 29.90, checkoutEnabled: true,
     sizes: { xs: {label:'XS', dimensions:'30 × 50 cm', price:23.90}, s:{label:'S', dimensions:'40 × 60 cm', price:25.40}, m:{label:'M', dimensions:'45 × 70 cm', price:26.90}, l:{label:'L', dimensions:'50 × 80 cm', price:28.40}, xl:{label:'XL', dimensions:'60 × 90 cm', price:29.90} },
