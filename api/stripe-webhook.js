@@ -80,12 +80,20 @@ export default async function handler(req, res, dependencies = {}) {
     if (!shouldSendMeta && !shouldSendEmail) return res.status(200).json({ received: true, duplicate: true });
 
     const { data: items } = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
+    let metaFailed = false;
+    let metaSent = false;
     if (shouldSendMeta) {
-      const sendMeta = dependencies.sendMetaPurchase || sendMetaPurchase;
-      const metaResult = await sendMeta({ session, items, accessToken: metaAccessToken, testEventCode, fetchImpl: dependencies.fetchMeta || fetch });
-      if (metaResult?.skipped) throw new Error('Meta purchase unexpectedly skipped');
-      session.metadata = { ...session.metadata, meta_capi_sent_at: new Date().toISOString() };
-      await stripe.checkout.sessions.update(session.id, { metadata: session.metadata });
+      try {
+        const sendMeta = dependencies.sendMetaPurchase || sendMetaPurchase;
+        const metaResult = await sendMeta({ session, items, accessToken: metaAccessToken, testEventCode, fetchImpl: dependencies.fetchMeta || fetch });
+        if (metaResult?.skipped) throw new Error('Meta purchase unexpectedly skipped');
+        session.metadata = { ...session.metadata, meta_capi_sent_at: new Date().toISOString() };
+        await stripe.checkout.sessions.update(session.id, { metadata: session.metadata });
+        metaSent = true;
+      } catch {
+        metaFailed = true;
+        console.error('PATTEO: Meta delivery failed; continuing paid-order confirmation.');
+      }
     }
 
     let emailed = false;
@@ -132,7 +140,9 @@ export default async function handler(req, res, dependencies = {}) {
       }
       await stripe.checkout.sessions.update(session.id, { metadata: session.metadata });
     }
-    return res.status(200).json({ received: true, emailed, metaSent: shouldSendMeta });
+    // Ask Stripe to retry the unsent Meta event after completing the email once.
+    if (metaFailed) return res.status(502).json({ received: true, emailed, metaSent: false, error: 'Transmission Meta à réessayer' });
+    return res.status(200).json({ received: true, emailed, metaSent });
   } catch (error) {
     console.error('PATTEO: paid webhook processing failed.', error?.type || 'provider error', error?.code || '');
     return res.status(502).json({ error: 'Traitement de la commande à réessayer' });

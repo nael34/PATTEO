@@ -60,7 +60,11 @@ export async function sendMetaPurchase({ session, items, accessToken, testEventC
     body: JSON.stringify(payload),
   });
   if (!response.ok) {
-    console.error('PATTEO: Meta Conversions API rejected a paid Purchase event.', response.status);
+    let failure;
+    try { failure = (await response.json())?.error; } catch {}
+    // Log only numeric provider codes, never tokens, payloads or customer data.
+    console.error('PATTEO: Meta Conversions API rejected a paid Purchase event.', response.status,
+      'code', Number(failure?.code) || 0, 'subcode', Number(failure?.error_subcode) || 0);
     throw new Error('Meta Conversions API rejected Purchase event');
   }
   const result = await response.json();

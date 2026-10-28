@@ -2,6 +2,57 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getMetaTestEventCode, sendMetaPurchase } from '../api/_lib/meta-capi.js';
 import webhook from '../api/stripe-webhook.js';
+import createCheckout from '../api/create-checkout-session.js';
+
+test('Meta rejection does not block confirmation email and retries do not duplicate the email', async () => {
+  const keys = ['META_CAPI_ACCESS_TOKEN', 'STRIPE_WEBHOOK_SECRET_LIVE', 'RESEND_API_KEY'];
+  const previous = Object.fromEntries(keys.map(k => [k, process.env[k]]));
+  Object.assign(process.env, { META_CAPI_ACCESS_TOKEN: 'fixture', STRIPE_WEBHOOK_SECRET_LIVE: 'whsec_fixture', RESEND_API_KEY: 're_fixture' });
+  try {
+    const session = { id: 'cs_live_fixture', livemode: true, status: 'complete', payment_status: 'paid', customer_email: 'buyer@example.test',
+      metadata: { meta_marketing_consent: 'granted', meta_event_id: 'event-fixture' } };
+    let emailCalls = 0;
+    let metaCalls = 0;
+    const stripe = { webhooks: { constructEvent: () => ({ type: 'checkout.session.completed', livemode: true, data: { object: { id: session.id } } }) },
+      checkout: { sessions: { retrieve: async () => session, listLineItems: async () => ({ data: [] }), update: async (_id, values) => { session.metadata = values.metadata; } } } };
+    const invoke = async () => {
+      const res = { status(n) { this.statusCode = n; return this; }, json(body) { this.body = body; return this; } };
+      await webhook({ method: 'POST', headers: {}, body: Buffer.from('fixture') }, res, { getConfig: () => ({ mode: 'live', stripe }),
+        sendMetaPurchase: async () => { metaCalls++; if (metaCalls < 3) throw new Error('Meta rejected'); return { eventsReceived: 1 }; },
+        sendEmail: async () => { emailCalls++; return new Response('{"id":"email-fixture"}'); } });
+      return res;
+    };
+    assert.equal((await invoke()).statusCode, 502);
+    assert.ok(session.metadata.confirmation_email_sent_at);
+    assert.equal(session.metadata.meta_capi_sent_at, undefined);
+    assert.equal((await invoke()).statusCode, 502);
+    assert.equal((await invoke()).statusCode, 200);
+    assert.ok(session.metadata.meta_capi_sent_at);
+    assert.equal(emailCalls, 1);
+  } finally {
+    for (const k of keys) previous[k] === undefined ? delete process.env[k] : process.env[k] = previous[k];
+  }
+});
+
+test('checkout test marker is controlled by server mode and consent, never by the browser', async () => {
+  const previous = process.env.META_TEST_EVENT_CODE;
+  process.env.META_TEST_EVENT_CODE = 'TEST123';
+  try {
+    for (const [mode, consent, expected] of [['test', true, 'TEST123'], ['test', false, undefined], ['live', true, undefined]]) {
+      let metadata;
+      const res = { status(n) { this.statusCode = n; return this; }, json(body) { this.body = body; return this; } };
+      await createCheckout({ method: 'POST', body: { cart: [{ color: 'gris', size: 'xs', qty: 1 }], marketingConsent: consent, metaTestEventCode: 'TESTINJECTED' } }, res, {
+        getConfig: () => ({ mode, publishableKey: mode === 'test' ? 'pk_test_fixture' : 'pk_live_fixture', stripe: { checkout: { sessions: {
+          create: async input => { metadata = input.metadata; return { client_secret: 'fixture', livemode: mode === 'live' }; },
+        } } } }),
+      });
+      assert.equal(res.statusCode, 200);
+      assert.equal(metadata.meta_test_event_code, expected);
+    }
+  } finally {
+    previous === undefined ? delete process.env.META_TEST_EVENT_CODE : process.env.META_TEST_EVENT_CODE = previous;
+  }
+});
 
 test('Meta test purchase requires a matching session marker and never sends a test code in live mode', async () => {
   assert.equal(getMetaTestEventCode('live', { META_TEST_EVENT_CODE: 'TEST123' }), null);
