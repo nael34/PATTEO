@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-export const META_PIXEL_ID = '2161618601394842';
+export const META_PIXEL_ID = '2182463895952425';
 export const META_GRAPH_API_VERSION = 'v25.0';
 
 const sha256 = value => createHash('sha256').update(value).digest('hex');
