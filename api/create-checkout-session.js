@@ -9,6 +9,13 @@ export default async function handler(req, res, dependencies = {}) {
   const cart = normalizeCart(req.body?.cart);
   if (!cart) return res.status(400).json({ error: 'Panier invalide' });
 
+  // Checkout must return to this isolated preview, never to the live store.
+  const previewHost = String(process.env.VERCEL_URL || '').trim().toLowerCase();
+  if (config.mode === 'test' && (!/^[a-z0-9-]+\.vercel\.app$/.test(previewHost) || previewHost === 'patteo.vercel.app')) {
+    return res.status(503).json({ error: 'URL de prévisualisation Stripe invalide' });
+  }
+  const checkoutOrigin = config.mode === 'test' ? `https://${previewHost}` : 'https://patteo.vercel.app';
+
   const orderNumber = makeOrderNumber();
   const marketingConsent = req.body?.marketingConsent === true;
   const metaTestEventCode = getMetaTestEventCode(config.mode);
@@ -30,7 +37,7 @@ export default async function handler(req, res, dependencies = {}) {
       mode: 'payment',
       ui_mode: 'elements',
       locale: 'fr',
-      return_url: 'https://patteo.vercel.app/commande/?session_id={CHECKOUT_SESSION_ID}',
+      return_url: `${checkoutOrigin}/commande/?session_id={CHECKOUT_SESSION_ID}`,
       billing_address_collection: 'auto',
       shipping_address_collection: { allowed_countries: ['FR'] },
       integration_identifier: makeIntegrationIdentifier(),
