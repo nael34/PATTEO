@@ -7,6 +7,7 @@ export const DIMENSIONS = Object.freeze({ xs: '30 × 50 cm', s: '40 × 60 cm', m
 
 export function getStripeConfig(env = process.env) {
   const mode = env.STRIPE_MODE;
+  if (env.VERCEL_ENV === 'preview' && mode === 'live') return { error: 'Le paiement réel est interdit sur une prévisualisation PATTEO.' };
   if (mode !== 'test' && mode !== 'live') return { error: 'STRIPE_MODE doit être exactement « test » ou « live ».' };
   const secretKey = mode === 'live' ? env.STRIPE_RESTRICTED_KEY_LIVE : env.STRIPE_SECRET_KEY;
   const publishableKey = mode === 'live' ? env.STRIPE_PUBLISHABLE_KEY_LIVE : env.STRIPE_PUBLISHABLE_KEY;
