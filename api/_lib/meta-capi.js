@@ -39,7 +39,9 @@ export async function sendMetaPurchase({ session, items, accessToken, testEventC
       event_time: Math.floor(Date.now() / 1000),
       event_id: metadata.meta_event_id,
       action_source: 'website',
-      event_source_url: 'https://patteo.vercel.app/commande/',
+      event_source_url: testEventCode && /^[a-z0-9-]+\.vercel\.app$/.test(process.env.VERCEL_URL || '')
+        ? `https://${process.env.VERCEL_URL}/commande/`
+        : 'https://patteo.vercel.app/commande/',
       user_data: userData,
       custom_data: {
         currency: String(session.currency || 'eur').toUpperCase(),
