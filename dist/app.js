@@ -6,6 +6,8 @@
   vercelAnalytics.src = '/_vercel/insights/script.js';
   document.head.appendChild(vercelAnalytics);
   const META_PIXEL_ID = '2182463895952425';
+  // Test preview: do not pollute live browser Pixel statistics; only CAPI test Purchase is sent.
+  const browserMetaEnabled = window.location.hostname === 'patteo.vercel.app';
   const SHOP = {
     price: 29.90, checkoutEnabled: true,
     sizes: { xs: {label:'XS', dimensions:'30 × 50 cm', price:23.90}, s:{label:'S', dimensions:'40 × 60 cm', price:25.40}, m:{label:'M', dimensions:'45 × 70 cm', price:26.90}, l:{label:'L', dimensions:'50 × 80 cm', price:28.40}, xl:{label:'XL', dimensions:'60 × 90 cm', price:29.90} },
@@ -136,13 +138,13 @@
   let marketingConsentGranted=savedConsent==='granted';
   const marketingAllowed=()=>marketingConsentGranted;
   const ensureMetaPixel=()=>{
-    if(!marketingAllowed()||window.__patteoMetaInitialized)return;
+    if(!browserMetaEnabled||!marketingAllowed()||window.__patteoMetaInitialized)return;
     window.__patteoMetaInitialized=true;
     (function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments);};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=true;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=true;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);})(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
     window.fbq('init',META_PIXEL_ID);window.fbq('track','PageView');
   };
   const readCookie=name=>{const match=document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));try{return decodeURIComponent(match?.[1]||'');}catch{return '';}};
-  const trackMeta=(name,params,eventID)=>{if(!marketingAllowed())return;ensureMetaPixel();if(eventID)window.fbq?.('track',name,params,{eventID});else window.fbq?.('track',name,params);};
+  const trackMeta=(name,params,eventID)=>{if(!browserMetaEnabled||!marketingAllowed())return;ensureMetaPixel();if(eventID)window.fbq?.('track',name,params,{eventID});else window.fbq?.('track',name,params);};
   const cookieBanner=document.getElementById('cookie-consent');
   const updateConsentUI=()=>{
     const state=savedConsent==='granted'?'acceptés':savedConsent==='denied'?'refusés':'à choisir';
