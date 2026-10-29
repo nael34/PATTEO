@@ -1,5 +1,10 @@
 (() => {
   'use strict';
+  // Vercel Web Analytics for this vanilla JavaScript storefront (no React component needed).
+  const vercelAnalytics = document.createElement('script');
+  vercelAnalytics.defer = true;
+  vercelAnalytics.src = '/_vercel/insights/script.js';
+  document.head.appendChild(vercelAnalytics);
   const META_PIXEL_ID = '2182463895952425';
   const SHOP = {
     price: 29.90, checkoutEnabled: true,
