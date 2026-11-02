@@ -119,3 +119,5 @@ body[data-page="product"] .product-info .price-line span{display:inline-flex;ali
 .launch-price-label{color:#70541a;font-size:12px;font-weight:650;letter-spacing:.04em}
 .swatch img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
 @media(max-width:600px){.launch-offer{padding:12px 14px;margin-top:8px;margin-bottom:12px;border-radius:12px}.launch-offer-price{font-size:29px}.launch-offer-badge{font-size:10px}.launch-offer p{font-size:12px}.swatches{flex-wrap:wrap}.swatch{min-width:48px;min-height:48px}}
+
+.product-info .price-reference{font-size:18px;color:#77837f;text-decoration-thickness:1.5px;white-space:nowrap}
