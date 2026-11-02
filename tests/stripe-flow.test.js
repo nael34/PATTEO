@@ -34,9 +34,9 @@ test('Stripe configuration strictly separates test and live key formats', () => 
 });
 
 test('server-authoritative cart validation merges variants and rejects tampering', () => {
-  assert.deepEqual(normalizeCart([{ color: 'gris', size: 'xs', qty: 2 }, { color: 'gris', size: 'xs', qty: 3 }]), [{ color: 'gris', size: 'xs', qty: 5 }]);
-  assert.equal(normalizeCart([{ color: 'gris', size: 'xs', qty: 11 }]), null);
-  assert.equal(normalizeCart([{ color: 'noir', size: 'xs', qty: 1 }]), null);
+  assert.deepEqual(normalizeCart([{ color: 'gris', size: 'l', qty: 2 }, { color: 'gris', size: 'l', qty: 3 }]), [{ color: 'gris', size: 'l', qty: 5 }]);
+  assert.equal(normalizeCart([{ color: 'gris', size: 'l', qty: 11 }]), null);
+  assert.equal(normalizeCart([{ color: 'noir', size: 'l', qty: 1 }]), null);
   assert.equal(normalizeCart([{ color: 'gris', size: 'xl', qty: 1, price: 1 }])[0].price, undefined);
   assert.equal(normalizeCart([]), null);
 });
@@ -44,20 +44,20 @@ test('server-authoritative cart validation merges variants and rejects tampering
 test('order and integration references are stable-format identifiers', () => {
   assert.equal(makeOrderNumber(new Date('2026-10-21T12:00:00Z'), () => 0), 'PT-20261021-AAAAAAAA');
   assert.equal(makeIntegrationIdentifier(() => 0), 'patteo-aaaaaaaa');
-  assert.match(formatCurrency(2390, 'EUR'), /23,90/);
+  assert.match(formatCurrency(2090, 'EUR'), /20,90/);
 });
 
 test('checkout creates a test-only session with server prices and order metadata', async () => {
   let created;
   const res = responseRecorder();
-  await createCheckout({ method: 'POST', body: { cart: [{ color: 'jaune', size: 'xs', qty: 2 }] } }, res, {
+  await createCheckout({ method: 'POST', body: { cart: [{ color: 'brown', size: 'l', qty: 2 }] } }, res, {
     getConfig: () => ({ mode: 'test', publishableKey: 'pk_test_fixture', stripe: { checkout: { sessions: { create: async value => { created = value; return { id: 'cs_test_pattee', livemode: false, client_secret: 'cs_test_secret' }; } } } } }),
   });
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.publishableKey, 'pk_test_fixture');
   assert.equal(created.mode, 'payment');
   assert.equal(created.ui_mode, 'elements');
-  assert.equal(created.line_items[0].price_data.unit_amount, 2390);
+  assert.equal(created.line_items[0].price_data.unit_amount, 2490);
   assert.equal(created.line_items[0].quantity, 2);
   assert.match(created.integration_identifier, /^patteo-[a-z]{8}$/);
   assert.match(created.metadata.order_number, /^PT-2026\d{4}-[A-Z]{8}$/);
@@ -72,7 +72,7 @@ test('checkout saves Meta matching data only after marketing consent', async () 
   await createCheckout({
     method: 'POST',
     headers: { 'x-forwarded-for': '203.0.113.42, 10.0.0.1', 'user-agent': 'Patteo-Test-Browser/1.0' },
-    body: { cart: [{ color: 'gris', size: 'xs', qty: 1 }], marketingConsent: true, metaFbp: 'fbp-fixture', metaFbc: 'fbc-fixture' },
+    body: { cart: [{ color: 'gris', size: 'l', qty: 1 }], marketingConsent: true, metaFbp: 'fbp-fixture', metaFbc: 'fbc-fixture' },
   }, res, {
     getConfig: () => ({ mode: 'test', publishableKey: 'pk_test_fixture', stripe: { checkout: { sessions: { create: async value => { created = value; return { id: 'cs_test_pattee', livemode: false, client_secret: 'cs_test_secret' }; } } } } }),
   });
@@ -87,7 +87,7 @@ test('checkout saves Meta matching data only after marketing consent', async () 
 test('checkout rejects invalid cart before calling Stripe', async () => {
   let called = false;
   const res = responseRecorder();
-  await createCheckout({ method: 'POST', body: { cart: [{ color: 'gris', size: 'xs', qty: 20 }] } }, res, {
+  await createCheckout({ method: 'POST', body: { cart: [{ color: 'gris', size: 'l', qty: 20 }] } }, res, {
     getConfig: () => ({ stripe: { checkout: { sessions: { create: async () => { called = true; } } } } }),
   });
   assert.equal(res.statusCode, 400);
@@ -121,22 +121,22 @@ test('return page builds a detailed recap only from a paid test session', async 
   const res = responseRecorder();
   await sessionStatus({ method: 'GET', query: { session_id: 'cs_test_pattee' } }, res, {
     getConfig: () => ({ stripe: { checkout: { sessions: {
-      retrieve: async () => ({ id: 'cs_test_pattee', livemode: false, status: 'complete', payment_status: 'paid', amount_total: 7620, currency: 'eur', metadata: { order_number: 'PT-20261021-ABCDEFGH' } }),
+      retrieve: async () => ({ id: 'cs_test_pattee', livemode: false, status: 'complete', payment_status: 'paid', amount_total: 6270, currency: 'eur', metadata: { order_number: 'PT-20261021-ABCDEFGH' } }),
       listLineItems: async () => ({ data: [
-        { description: 'Tapis Patteo 30 × 50 cm — Gris galet', quantity: 2, amount_subtotal: 4780, amount_total: 4780 },
-        { description: 'Tapis Patteo 50 × 80 cm — Bleu balade', quantity: 1, amount_subtotal: 2840, amount_total: 2840 },
+        { description: 'Tapis Patteo 50 × 80 cm — Gris classique', quantity: 2, amount_subtotal: 4180, amount_total: 4180 },
+        { description: 'Tapis Patteo 50 × 80 cm — Snow Blue', quantity: 1, amount_subtotal: 2090, amount_total: 2090 },
       ] }),
     } } } }),
   });
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.state, 'paid');
   assert.equal(res.body.orderNumber, 'PT-20261021-ABCDEFGH');
-  assert.equal(res.body.total, 7620);
+  assert.equal(res.body.total, 6270);
   assert.equal(res.body.items.length, 2);
   assert.equal(res.body.items[0].quantity, 2);
-  assert.equal(res.body.items[0].unitAmount, 2390);
-  assert.equal(res.body.items[0].amountTotal, 4780);
-  assert.match(res.body.items[1].unitLabel, /28,40/);
+  assert.equal(res.body.items[0].unitAmount, 2090);
+  assert.equal(res.body.items[0].amountTotal, 4180);
+  assert.match(res.body.items[1].unitLabel, /20,90/);
 });
 
 test('return page rejects live Checkout Session IDs in test mode', async () => {
@@ -159,12 +159,12 @@ test('webhook never emails failed/expired flows and is idempotent for paid sessi
   const previous = Object.fromEntries(keys.map(key => [key, process.env[key]]));
   Object.assign(process.env, { STRIPE_MODE: 'test', STRIPE_SECRET_KEY: 'sk_test_fixture', STRIPE_PUBLISHABLE_KEY: 'pk_test_fixture', STRIPE_WEBHOOK_SECRET: 'whsec_fixture', RESEND_API_KEY: 're_fixture', RESEND_FROM_EMAIL: 'PATTEO <orders@example.test>' });
   const stripe = new Stripe('sk_test_fixture');
-  const session = { id: 'cs_test_pattee', livemode: false, status: 'complete', payment_status: 'paid', amount_total: 2390, currency: 'eur', customer_details: { email: 'buyer@example.test' }, metadata: { order_number: 'PT-20261021-ABCDEFGH' } };
+  const session = { id: 'cs_test_pattee', livemode: false, status: 'complete', payment_status: 'paid', amount_total: 2090, currency: 'eur', customer_details: { email: 'buyer@example.test' }, metadata: { order_number: 'PT-20261021-ABCDEFGH' } };
   let sent = 0;
   let resendStatus = 500;
   let retrieved = 0;
   stripe.checkout.sessions.retrieve = async () => { retrieved++; return session; };
-  stripe.checkout.sessions.listLineItems = async () => ({ data: [{ description: 'Tapis Patteo XS — <Gris>', quantity: 1, amount_subtotal: 2390, amount_total: 2390 }] });
+  stripe.checkout.sessions.listLineItems = async () => ({ data: [{ description: 'Tapis Patteo L — <Gris>', quantity: 1, amount_subtotal: 2090, amount_total: 2090 }] });
   stripe.checkout.sessions.update = async (_id, values) => { session.metadata = values.metadata; return session; };
   const getConfig = () => ({ stripe });
   const call = async type => {
@@ -237,9 +237,9 @@ test('live webhook sends a real-order confirmation only for a Stripe-paid live s
   const previous = Object.fromEntries(keys.map(key => [key, process.env[key]]));
   Object.assign(process.env, { STRIPE_MODE: 'live', STRIPE_WEBHOOK_SECRET_LIVE: 'whsec_live_fixture', RESEND_API_KEY: 're_fixture', RESEND_FROM_EMAIL: 'PATTEO <orders@example.test>' });
   const stripe = new Stripe('sk_test_fixture');
-  const session = { id: 'cs_live_pattee', livemode: true, status: 'complete', payment_status: 'paid', amount_total: 2390, currency: 'eur', customer_details: { email: 'buyer@example.test' }, metadata: { order_number: 'PT-20261021-ABCDEFGH' } };
+  const session = { id: 'cs_live_pattee', livemode: true, status: 'complete', payment_status: 'paid', amount_total: 2090, currency: 'eur', customer_details: { email: 'buyer@example.test' }, metadata: { order_number: 'PT-20261021-ABCDEFGH' } };
   stripe.checkout.sessions.retrieve = async () => session;
-  stripe.checkout.sessions.listLineItems = async () => ({ data: [{ description: 'Tapis Patteo XS', quantity: 1, amount_subtotal: 2390, amount_total: 2390 }] });
+  stripe.checkout.sessions.listLineItems = async () => ({ data: [{ description: 'Tapis Patteo L', quantity: 1, amount_subtotal: 2090, amount_total: 2090 }] });
   stripe.checkout.sessions.update = async () => session;
   let sent = 0;
   const payload = eventPayload('checkout.session.completed', true);
@@ -265,10 +265,10 @@ test('Meta CAPI Purchase is consent-gated, deduplicated and sent only once for a
   const stripe = new Stripe('sk_test_fixture');
   const session = {
     id: 'cs_live_pattee', livemode: true, status: 'complete', payment_status: 'paid',
-    amount_total: 4780, currency: 'eur', customer_details: { email: ' Buyer@Example.Test ' },
+    amount_total: 4180, currency: 'eur', customer_details: { email: ' Buyer@Example.Test ' },
     metadata: { order_number: 'PT-20261021-ABCDEFGH', meta_marketing_consent: 'granted', meta_event_id: 'patteo_PT-20261021-ABCDEFGH', meta_fbp: 'fb.1.123.abc', meta_fbc: 'fb.1.123.click' },
   };
-  const items = [{ description: 'Tapis Patteo XS — Gris galet', quantity: 2, amount_subtotal: 4780, amount_total: 4780 }];
+  const items = [{ description: 'Tapis Patteo L — Gris classique', quantity: 2, amount_subtotal: 4180, amount_total: 4180 }];
   stripe.checkout.sessions.retrieve = async () => session;
   stripe.checkout.sessions.listLineItems = async () => ({ data: items });
   stripe.checkout.sessions.update = async (_id, values) => { session.metadata = values.metadata; return session; };
@@ -308,10 +308,10 @@ test('Meta CAPI Purchase hashes email and includes shared Pixel/CAPI event ID', 
   let request;
   const result = await sendMetaPurchase({
     session: {
-      id: 'cs_live_order', amount_total: 2840, currency: 'eur', customer_details: { email: 'Buyer@Example.Test' },
+      id: 'cs_live_order', amount_total: 2090, currency: 'eur', customer_details: { email: 'Buyer@Example.Test' },
       metadata: { order_number: 'PT-20261021-ABCDEFGH', meta_marketing_consent: 'granted', meta_event_id: 'purchase-shared-id', meta_fbp: 'fbp-fixture', meta_fbc: 'fbc-fixture', meta_client_ip_address: '203.0.113.42', meta_client_user_agent: 'Patteo-Test-Browser/1.0' },
     },
-    items: [{ description: 'Tapis Patteo L — Bleu balade', quantity: 1, amount_subtotal: 2840 }],
+    items: [{ description: 'Tapis Patteo L — Snow Blue', quantity: 1, amount_subtotal: 2090 }],
     accessToken: 'EAA_fixture',
     fetchImpl: async (url, options) => {
       request = { url, payload: JSON.parse(options.body) };
@@ -327,7 +327,7 @@ test('Meta CAPI Purchase hashes email and includes shared Pixel/CAPI event ID', 
   assert.equal(event.user_data.fbc, 'fbc-fixture');
   assert.equal(event.user_data.client_ip_address, '203.0.113.42');
   assert.equal(event.user_data.client_user_agent, 'Patteo-Test-Browser/1.0');
-  assert.equal(event.custom_data.value, 28.4);
+  assert.equal(event.custom_data.value, 20.9);
   assert.match(request.url, /2182463895952425\/events\?/);
 });
 
@@ -344,13 +344,13 @@ test('Meta CAPI never transmits a purchase without an explicit saved marketing c
 });
 
 test('confirmation email escapes item names and includes order and totals', () => {
-  const email = confirmationEmail({ id: 'cs_test_id', amount_total: 2390, metadata: { order_number: 'PT-20261021-ABCDEFGH' } }, [
-    { description: '<script>alert(1)</script>', quantity: 1, amount_subtotal: 2390, amount_total: 2390 },
+  const email = confirmationEmail({ id: 'cs_test_id', amount_total: 2090, metadata: { order_number: 'PT-20261021-ABCDEFGH' } }, [
+    { description: '<script>alert(1)</script>', quantity: 1, amount_subtotal: 2090, amount_total: 2090 },
   ]);
   assert.match(email.html, /PT-20261021-ABCDEFGH/);
   assert.doesNotMatch(email.html, /<script>/);
   assert.match(email.html, /&lt;script&gt;/);
-  assert.match(email.text, /23,90/);
+  assert.match(email.text, /20,90/);
   assert.match(email.html, /Préparation : 1 à 3 jours\. Acheminement : 8 à 18 jours après expédition\./);
   assert.match(email.text, /8 à 18 jours après expédition/);
 });

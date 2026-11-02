@@ -41,7 +41,7 @@ test('checkout test marker is controlled by server mode and consent, never by th
     for (const [mode, consent, expected] of [['test', true, 'TEST123'], ['test', false, undefined], ['live', true, undefined]]) {
       let metadata;
       const res = { status(n) { this.statusCode = n; return this; }, json(body) { this.body = body; return this; } };
-      await createCheckout({ method: 'POST', body: { cart: [{ color: 'gris', size: 'xs', qty: 1 }], marketingConsent: consent, metaTestEventCode: 'TESTINJECTED' } }, res, {
+      await createCheckout({ method: 'POST', body: { cart: [{ color: 'gris', size: 'l', qty: 1 }], marketingConsent: consent, metaTestEventCode: 'TESTINJECTED' } }, res, {
         getConfig: () => ({ mode, publishableKey: mode === 'test' ? 'pk_test_fixture' : 'pk_live_fixture', stripe: { checkout: { sessions: {
           create: async input => { metadata = input.metadata; return { client_secret: 'fixture', livemode: mode === 'live' }; },
         } } } }),
@@ -58,7 +58,7 @@ test('Meta test purchase requires a matching session marker and never sends a te
   assert.equal(getMetaTestEventCode('live', { META_TEST_EVENT_CODE: 'TEST123' }), null);
   assert.equal(getMetaTestEventCode('test', { META_TEST_EVENT_CODE: 'invalid' }), null);
   assert.equal(getMetaTestEventCode('test', { META_TEST_EVENT_CODE: 'TEST123' }), 'TEST123');
-  const session = { id: 'cs_test_fixture', livemode: false, amount_total: 2390, currency: 'eur',
+  const session = { id: 'cs_test_fixture', livemode: false, amount_total: 2090, currency: 'eur',
     metadata: { meta_marketing_consent: 'granted', meta_event_id: 'test-purchase', meta_test_event_code: 'TEST123' } };
   let sent = 0;
   const fetchImpl = async (_url, options) => {

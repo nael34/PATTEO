@@ -1,4 +1,4 @@
-import { COLORS, DIMENSIONS, PRICES, getStripeConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from './_lib/stripe-test.js';
+import { COLORS, DIMENSIONS, SUPPLIER_VARIANTS, getVariantPrice, getStripeConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from './_lib/stripe-test.js';
 import { getMetaTestEventCode } from './_lib/meta-capi.js';
 
 export default async function handler(req, res, dependencies = {}) {
@@ -40,8 +40,16 @@ export default async function handler(req, res, dependencies = {}) {
         quantity: item.qty,
         price_data: {
           currency: 'eur',
-          unit_amount: PRICES[item.size],
-          product_data: { name: `Tapis Patteo ${DIMENSIONS[item.size]} — ${COLORS[item.color]}` },
+          unit_amount: getVariantPrice(item.color, item.size),
+          product_data: {
+            name: `Tapis Patteo ${DIMENSIONS[item.size]} — ${COLORS[item.color]}`,
+            metadata: {
+              patteo_color: item.color,
+              patteo_size: item.size,
+              cj_sku: SUPPLIER_VARIANTS[item.color][item.size].sku,
+              cj_vid: SUPPLIER_VARIANTS[item.color][item.size].vid,
+            },
+          },
         },
       })),
     });

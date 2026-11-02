@@ -1,9 +1,24 @@
 import Stripe from 'stripe';
 
 export const STRIPE_API_VERSION = '2026-08-26.dahlia';
-export const PRICES = Object.freeze({ xs: 2390, s: 2540, m: 2690, l: 2840, xl: 2990 });
-export const COLORS = Object.freeze({ gris: 'Gris galet', bleu: 'Bleu balade', jaune: 'Jaune soleil' });
-export const DIMENSIONS = Object.freeze({ xs: '30 × 50 cm', s: '40 × 60 cm', m: '45 × 70 cm', l: '50 × 80 cm', xl: '60 × 90 cm' });
+export const PRICES = Object.freeze({ l: 2490, xl: 2990 });
+export const COLORS = Object.freeze({ gris: 'Gris classique (Silver Gray)', bleu: 'Snow Blue', rouge: 'Bright Red', brown: 'Brown', camel: 'Camel', champagne: 'Champagne', darkgray: 'Dark Gray', green: 'Glass Green' });
+export const SUPPLIER_VARIANTS = Object.freeze({
+  gris: Object.freeze({ l: Object.freeze({ sku: 'CJYD1640613105AZ', vid: '2609290756421616707' }), xl: Object.freeze({ sku: 'CJYD1640613107CX', vid: '2609290756421616708' }) }),
+  bleu: Object.freeze({ l: Object.freeze({ sku: 'CJYD164061395QJ', vid: '2609290756421616701' }), xl: Object.freeze({ sku: 'CJYD164061397SH', vid: '2609290756421616702' }) }),
+  rouge: Object.freeze({ l: Object.freeze({ sku: 'CJYD164061319SH', vid: '1603749659128901633' }), xl: Object.freeze({ sku: 'CJYD164061326ZA', vid: '1603749659141484544' }) }),
+  brown: Object.freeze({ l: Object.freeze({ sku: 'CJYD164061316PK', vid: '1603749659124707329' }), xl: Object.freeze({ sku: 'CJYD164061323WD', vid: '1603749659133095938' }) }),
+  camel: Object.freeze({ l: Object.freeze({ sku: 'CJYD164061315OL', vid: '1603749659124707328' }), xl: Object.freeze({ sku: 'CJYD164061322VE', vid: '1603749659133095937' }) }),
+  champagne: Object.freeze({ l: Object.freeze({ sku: 'CJYD164061317QJ', vid: '1603749659124707330' }), xl: Object.freeze({ sku: 'CJYD164061324XC', vid: '1603749659137290240' }) }),
+  darkgray: Object.freeze({ l: Object.freeze({ sku: 'CJYD164061314NM', vid: '1603749659120513026' }), xl: Object.freeze({ sku: 'CJYD164061321UF', vid: '1603749659133095936' }) }),
+  green: Object.freeze({ l: Object.freeze({ sku: 'CJYD164061318RI', vid: '1603749659128901632' }), xl: Object.freeze({ sku: 'CJYD164061325YB', vid: '1603749659137290241' }) }),
+});
+export function getVariantPrice(color, size) {
+  if (!Object.hasOwn(COLORS, color) || !Object.hasOwn(PRICES, size)) return null;
+  if (['gris', 'bleu'].includes(color)) return size === 'l' ? 2090 : 2490;
+  return PRICES[size];
+}
+export const DIMENSIONS = Object.freeze({ l: '50 × 80 cm', xl: '60 × 90 cm' });
 
 export function getStripeConfig(env = process.env) {
   const mode = env.STRIPE_MODE;

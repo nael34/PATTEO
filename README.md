@@ -12,7 +12,7 @@ node scripts/render.mjs
 npm run check
 ```
 
-Installer les dépendances avec `npm ci` (Stripe 22.6.0). Node 20+ suffit ; version utilisée : 24.14.0. Le serveur local utilise le port 4187 et sert les pages statiques, sans exécuter les routes `/api`. `dist` est un site statique portable, également déployable sur Vercel. `app.js` contient les textes, les variantes et les interactions ; le prix va de 23,90 € en XS à 29,90 € en XL. Le script de pré-rendu inscrit le contenu dans le HTML pour un premier affichage immédiat.
+Installer les dépendances avec `npm ci` (Stripe 22.6.0). Node 20+ suffit ; version utilisée : 24.14.0. Le serveur local utilise le port 4187 et sert les pages statiques, sans exécuter les routes `/api`. `dist` est un site statique portable, également déployable sur Vercel. `app.js` contient les textes, les variantes et les interactions ; les formats fournisseur communs aux huit couleurs sont L (50 × 80 cm) et XL (60 × 90 cm), avec des prix de lancement de 20,90 € à 29,90 €, livraison comprise. Le script de pré-rendu inscrit le contenu dans le HTML pour un premier affichage immédiat.
 
 ## État réel
 
