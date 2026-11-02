@@ -158,3 +158,18 @@ body[data-page="product"] .product-benefits li:hover{transform:translateX(4px);c
 @keyframes patteo-added{45%{transform:scale(.97)}70%{box-shadow:0 0 0 8px #d5ad5222}100%{transform:none}}
 @media(max-width:760px){body[data-page="product"] .main-product-photo:hover{transform:none}body[data-page="product"] .mobile-buybar{animation:patteo-buybar-in .48s .45s ease both}@keyframes patteo-buybar-in{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}}
 @media(prefers-reduced-motion:reduce){body[data-page="product"] .launch-offer,body[data-page="product"] .launch-offer::after,body[data-page="product"] .launch-offer-price,body[data-page="product"] .product-gallery,body[data-page="product"] .product-info,body[data-page="product"] #main-product-image.photo-shift,body[data-page="product"] [data-current-price].price-pop,body[data-page="product"] .price-reference.price-pop,body[data-page="product"] [data-add].added,body[data-page="product"] .mobile-buybar{animation:none!important}body[data-page="product"] .reveal-ready{opacity:1;transform:none;transition:none}}
+
+/* Continuous product motion requested for a visibly living storefront. */
+body[data-page="product"] .product-info [data-current-price]{display:inline-block;animation:patteo-live-price 2.25s ease-in-out infinite}
+body[data-page="product"] .product-info [data-current-price].price-pop{animation:patteo-price-pop .48s cubic-bezier(.2,.85,.25,1),patteo-live-price 2.25s .48s ease-in-out infinite}
+body[data-page="product"] #main-product-image{animation:patteo-product-breathe 5.2s ease-in-out infinite;transform-origin:50% 60%}
+body[data-page="product"] #main-product-image.photo-shift{animation:patteo-photo-shift .42s cubic-bezier(.2,.75,.25,1),patteo-product-breathe 5.2s .42s ease-in-out infinite}
+body[data-page="product"] .swatch.selected{animation:patteo-selected-color 2.4s ease-in-out infinite}
+body[data-page="product"] .add-button::after{left:-35%;animation:patteo-cta-shine 3.2s ease-in-out infinite}
+body[data-page="product"] .mobile-buybar .button{box-shadow:0 0 0 0 #d5ad5235;animation:patteo-mobile-cta 2.5s ease-in-out infinite}
+@keyframes patteo-live-price{0%,100%{transform:translateY(0) scale(1);text-shadow:0 0 0 #d5ad5200}50%{transform:translateY(-2px) scale(1.045);color:#a86f0e;text-shadow:0 7px 22px #d5ad524f}}
+@keyframes patteo-product-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.012)}}
+@keyframes patteo-selected-color{0%,100%{box-shadow:0 0 0 3px #f7e7b8,0 8px 20px #173e5017}50%{box-shadow:0 0 0 6px #f3d28655,0 11px 28px #173e5025}}
+@keyframes patteo-cta-shine{0%,58%{left:-35%;opacity:0}67%{opacity:1}88%,100%{left:125%;opacity:0}}
+@keyframes patteo-mobile-cta{0%,100%{box-shadow:0 0 0 0 #d5ad5235}50%{box-shadow:0 0 0 7px #d5ad5200}}
+@media(prefers-reduced-motion:reduce){body[data-page="product"] .product-info [data-current-price],body[data-page="product"] #main-product-image,body[data-page="product"] #main-product-image.photo-shift,body[data-page="product"] .swatch.selected,body[data-page="product"] .add-button::after,body[data-page="product"] .mobile-buybar .button{animation:none!important}}
