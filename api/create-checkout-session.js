@@ -1,4 +1,4 @@
-import { COLORS, DIMENSIONS, SUPPLIER_VARIANTS, getVariantPrice, getStripeConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from './_lib/stripe-test.js';
+import { COLORS, DIMENSIONS, SUPPLIER_VARIANTS, priceCart, getStripeConfig, makeIntegrationIdentifier, makeOrderNumber, normalizeCart } from './_lib/stripe-test.js';
 import { getMetaTestEventCode } from './_lib/meta-capi.js';
 
 export default async function handler(req, res, dependencies = {}) {
@@ -8,6 +8,7 @@ export default async function handler(req, res, dependencies = {}) {
 
   const cart = normalizeCart(req.body?.cart);
   if (!cart) return res.status(400).json({ error: 'Panier invalide' });
+  const pricing = priceCart(cart);
 
   const orderNumber = makeOrderNumber();
   const marketingConsent = req.body?.marketingConsent === true;
@@ -34,15 +35,15 @@ export default async function handler(req, res, dependencies = {}) {
       billing_address_collection: 'auto',
       shipping_address_collection: { allowed_countries: ['FR'] },
       integration_identifier: makeIntegrationIdentifier(),
-      metadata: { order_number: orderNumber, ...marketingMetadata },
+      metadata: { order_number: orderNumber, duo_savings_cents: String(pricing.savings), ...marketingMetadata },
       payment_intent_data: { metadata: { order_number: orderNumber } },
-      line_items: cart.map(item => ({
+      line_items: pricing.lines.map(item => ({
         quantity: item.qty,
         price_data: {
           currency: 'eur',
-          unit_amount: getVariantPrice(item.color, item.size),
+          unit_amount: item.unitAmount,
           product_data: {
-            name: `Tapis Patteo ${DIMENSIONS[item.size]} — ${COLORS[item.color]}`,
+            name: `Tapis Patteo ${DIMENSIONS[item.size]} — ${COLORS[item.color]}${item.duo ? ' · Offre duo −50 %' : ''}`,
             metadata: {
               patteo_color: item.color,
               patteo_size: item.size,

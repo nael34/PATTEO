@@ -20,6 +20,24 @@ export function getVariantPrice(color, size) {
 }
 export const DIMENSIONS = Object.freeze({ l: '50 × 80 cm', xl: '60 × 90 cm' });
 
+// Each same-size pair of Silver Gray / Snow Blue gets one unit at half price.
+// Quantities and variants are validated before this server-owned calculation.
+export function priceCart(cart) {
+  const discountLeft = Object.fromEntries(Object.keys(PRICES).map(size => [size,
+    Math.floor(cart.filter(i => i.size === size && ['gris','bleu'].includes(i.color)).reduce((n,i) => n+i.qty,0)/2)]));
+  const lines = [];
+  for (const item of cart) {
+    const regular = getVariantPrice(item.color,item.size);
+    const discounted = ['gris','bleu'].includes(item.color) ? Math.min(item.qty,discountLeft[item.size]) : 0;
+    discountLeft[item.size] -= discounted;
+    if (item.qty > discounted) lines.push({...item,qty:item.qty-discounted,unitAmount:regular,duo:false});
+    if (discounted) lines.push({...item,qty:discounted,unitAmount:regular/2,duo:true});
+  }
+  const subtotal = cart.reduce((n,i)=>n+getVariantPrice(i.color,i.size)*i.qty,0);
+  const total = lines.reduce((n,i)=>n+i.unitAmount*i.qty,0);
+  return {lines,subtotal,total,savings:subtotal-total};
+}
+
 export function getStripeConfig(env = process.env) {
   const mode = env.STRIPE_MODE;
   if (mode !== 'test' && mode !== 'live') return { error: 'STRIPE_MODE doit être exactement « test » ou « live ».' };

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import vm from 'node:vm';
 import checkout from '../api/create-checkout-session.js';
-import { COLORS, PRICES, SUPPLIER_VARIANTS, getVariantPrice } from '../api/_lib/stripe-test.js';
+import { COLORS, PRICES, SUPPLIER_VARIANTS, getVariantPrice, priceCart, normalizeCart } from '../api/_lib/stripe-test.js';
 
 test('all 16 supplier-backed variants agree between displayed cart prices and server-authoritative Stripe line items', async () => {
   const code = await readFile(new URL('../dist/app.js', import.meta.url), 'utf8');
@@ -13,7 +13,8 @@ test('all 16 supplier-backed variants agree between displayed cart prices and se
       const context = {document:{body:{dataset:{page:'checkout'}},getElementById:id=>nodes[id]},window:{__PATTEO_BUILD:true,location:{search:`?couleur=${color}&taille=${size}`}},URLSearchParams,Intl,localStorage:{getItem:()=>JSON.stringify([{color,size,qty:2}])}};
       vm.runInNewContext(code,context);
       const expected = getVariantPrice(color,size);
-      assert.ok(nodes.main.innerHTML.includes(new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(expected*2/100)));
+      const pricing = priceCart([{color,size,qty:2}]);
+      assert.ok(nodes.main.innerHTML.includes(new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(pricing.total/100)));
       await stat(new URL('../dist'+context.window.__PATTEO_CONFIG.colors[color].image,import.meta.url));
       await stat(new URL('../dist'+context.window.__PATTEO_CONFIG.colors[color].texture,import.meta.url));
       assert.notEqual(context.window.__PATTEO_CONFIG.colors[color].image,context.window.__PATTEO_CONFIG.colors[color].texture);
@@ -21,8 +22,8 @@ test('all 16 supplier-backed variants agree between displayed cart prices and se
       const res={statusCode:200,status(n){this.statusCode=n;return this;},json(value){this.body=value;return this;}};
       await checkout({method:'POST',body:{cart:[{color,size,qty:2,price:1,unit_amount:1}]}},res,{getConfig:()=>({mode:'test',publishableKey:'pk_test_fixture',stripe:{checkout:{sessions:{create:async p=>{payload=p;return {livemode:false,client_secret:'test_fixture'};}}}}})});
       assert.equal(res.statusCode,200);
-      assert.equal(payload.line_items[0].price_data.unit_amount,expected);
-      assert.equal(payload.line_items[0].quantity,2);
+      assert.equal(payload.line_items.reduce((n,i)=>n+i.price_data.unit_amount*i.quantity,0),pricing.total);
+      assert.equal(payload.line_items.reduce((n,i)=>n+i.quantity,0),2);
       assert.equal(payload.line_items[0].price_data.product_data.metadata.cj_sku,SUPPLIER_VARIANTS[color][size].sku);
       if(size==='xl')assert.equal(expected,['gris','bleu'].includes(color)?2490:2990);
     }
@@ -34,5 +35,24 @@ test('multicolor XL basket keeps distinct colors and exact totals', async () => 
   const res={status(n){this.statusCode=n;return this;},json(value){this.body=value;return this;}};
   await checkout({method:'POST',body:{cart:Object.keys(COLORS).map(color=>({color,size:'xl',qty:1}))}},res,{getConfig:()=>({mode:'test',publishableKey:'pk_test_fixture',stripe:{checkout:{sessions:{create:async p=>{payload=p;return {livemode:false,client_secret:'test_fixture'};}}}}})});
   assert.equal(payload.line_items.length,8);
-  assert.equal(payload.line_items.reduce((n,i)=>n+i.price_data.unit_amount*i.quantity,0),22920);
+  assert.equal(payload.line_items.reduce((n,i)=>n+i.price_data.unit_amount*i.quantity,0),21675);
+});
+
+test('duo discount is automatic per same-size gray/blue pair, never from client prices', () => {
+  const cases = [
+    [[{color:'bleu',size:'xl',qty:2}],3735],
+    [[{color:'gris',size:'l',qty:2}],3135],
+    [[{color:'gris',size:'xl',qty:1},{color:'bleu',size:'xl',qty:1}],3735],
+    [[{color:'gris',size:'l',qty:1},{color:'bleu',size:'xl',qty:1}],4580],
+    [[{color:'rouge',size:'xl',qty:2}],5980],
+    [[{color:'bleu',size:'xl',qty:3}],6225],
+    [[{color:'bleu',size:'xl',qty:4}],7470],
+    [[{color:'bleu',size:'xl',qty:1,unitAmount:1},{color:'bleu',size:'xl',qty:1,discount:100}],3735],
+  ];
+  for (const [cart,total] of cases) {
+    const priced=priceCart(normalizeCart(cart));
+    assert.equal(priced.total,total);
+    assert.equal(priced.lines.reduce((n,i)=>n+i.qty,0),cart.reduce((n,i)=>n+i.qty,0));
+    assert.equal(priced.subtotal-priced.savings,priced.total);
+  }
 });
