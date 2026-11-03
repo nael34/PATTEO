@@ -9,7 +9,7 @@
   }
   const META_PIXEL_ID = '2182463895952425';
   const SHOP = {
-    price: 24.90, checkoutEnabled: true,
+    price: 20.90, checkoutEnabled: true,
     sizes: { l:{label:'L', dimensions:'50 × 80 cm', price:24.90}, xl:{label:'XL', dimensions:'60 × 90 cm', price:29.90} },
     colors: {
       gris: { label: 'Gris classique (Silver Gray)', hex: '#a0a09b', image: '/assets/variants/silver-gray.webp', texture: '/assets/variants/silver-gray-detail.webp' },
@@ -39,7 +39,7 @@
   const page = document.body.dataset.page || 'home';
   const params = new URLSearchParams(window.location.search);
   let color = Object.hasOwn(SHOP.colors,params.get('couleur')) ? params.get('couleur') : 'gris';
-  let qty = 1, size = Object.hasOwn(SHOP.sizes,params.get('taille')) ? params.get('taille') : 'xl', cart = [];
+  let qty = 1, size = Object.hasOwn(SHOP.sizes,params.get('taille')) ? params.get('taille') : 'l', cart = [];
   const cleanCart = d => Array.isArray(d) ? d.filter(i => i && Object.hasOwn(SHOP.colors,i.color) && Number.isInteger(i.qty) && i.qty > 0).map(i=>({color:i.color,size:Object.hasOwn(SHOP.sizes,i.size)?i.size:'xl',qty:Math.min(i.qty,10)})).reduce((out,v)=>{const old=out.find(x=>x.color===v.color&&x.size===v.size);if(old)old.qty=Math.min(10,old.qty+v.qty);else out.push(v);return out;},[]) : [];
   try {cart=cleanCart(JSON.parse(localStorage.getItem('patteo-cart-v1')||'[]'));} catch {}
   const count = () => cart.reduce((n,i)=>n+i.qty,0);
